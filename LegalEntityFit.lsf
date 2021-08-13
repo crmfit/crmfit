@@ -1,0 +1,12 @@
+MODULE LegalEntityFit;
+
+REQUIRE LegalEntity; // LegalEntityBy
+
+// RM16699
+INN 'ИНН' = DATA STRING[12] (LegalEntity) CHARWIDTH 12;
+KPP 'КПП' = DATA STRING[9] (LegalEntity) CHARWIDTH 9;
+
+EXTEND FORM legalEntity
+    PROPERTIES(o) INN, KPP  
+; 
+

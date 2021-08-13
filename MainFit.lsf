@@ -1,0 +1,4 @@
+MODULE MainFit;
+
+REQUIRE LegalEntityFit;
+
