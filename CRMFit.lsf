@@ -23,8 +23,8 @@ REQUIRE Scheduler, Service, SystemEvents, Backup, Eval, SQLUtils, ProcessUtils, 
         FixedAssets, EquipmentDashboardNew, CustomerDashboardNew, CustomerTimeNew, ImportRmExt,                
         ProjectRedmineNew, CustomerNew, DebtDashboardNew, EventDashboardNew, RateService,
         AgreementIssueNew, IssueDashboardNew, StaticClientType, EmployeeNew, ContractDashboardNew,
-        TempClassReports, AgreementNew, TasksEmployees, InfoFusion, DocDashboardNew,
-        PaymentProcessDashboardNew, ActWordNew, ActRevise, DebtNew,  
+        TempClassReports, AgreementNew, TasksEmployees, DocDashboardNew,
+        PaymentProcessDashboardNew, ActWordNew, ActRevise, DebtNew, NormDocs,  
         // --- FIT 
         LegalEntityFit                   
 ;
