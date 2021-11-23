@@ -26,5 +26,8 @@ REQUIRE Scheduler, Service, SystemEvents, Backup, Eval, SQLUtils, ProcessUtils, 
         TempClassReports, AgreementNew, TasksEmployees, DocDashboardNew,
         PaymentProcessDashboardNew, ActWordNew, ActRevise, DebtNew, NormDocs,  
         // --- FIT 
-        LegalEntityFit                   
+        LegalEntityFit, 
+        // TestDataShow,
+        // EnterpriseData, стыковкка с 1C
+       EnterpriseDataCrmFit 
 ;

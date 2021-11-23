@@ -1,0 +1,86 @@
+MODULE EnterpriseDataCrmFit;
+
+REQUIRE EnterpriseData, EnterpriseDataSend, EnterpriseDataReceive, 
+        LegalEntity, LegalEntityFit, Customer, Payment, Utils, Time;
+
+NAMESPACE EnterpriseData;
+
+EXTEND CLASS Payment : EnterpriseData.PaymentOrder; // uid 'Ссылка' = DATA STRING[36] (Payment);
+EXTEND CLASS Payment : EnterpriseData.PaymentOrderDetail;
+EXTEND CLASS LegalEntity : EnterpriseData.Partner;
+
+//!!! отладка, форма приема данных
+// --------------------------------------------------------
+//fltPayment 'Платежки = Клиенты' = DATA LOCAL BOOLEAN ();
+//FORM viewClient
+//    OBJECTS p = Payment LAST
+//    PROPERTIES (p) number, Payment.date, Payment.nameLegalEntity, Payment.sum, Payment.note
+//    OBJECTS c = Customer LAST
+//    PROPERTIES (c) READONLY Customer.name
+//    OBJECTS l = LegalEntity
+//    PROPERTIES (l) uid, LegalEntity.name,LegalEntity.fullName, INN, KPP
+//    PROPERTIES () fltPayment TOOLBAR 
+//    FILTERS IF fltPayment() THEN customer(p) = c ELSE TRUE
+//    FILTERS customer(l) = c
+//    EVENTS ON INIT {fltPayment() <- TRUE;}
+//;
+// --------------------------------------------------------
+
+
+// проверка на ИНН организации: могут быть ранее введенные организации
+// чтобы исключить повторы в создании организаций проверяем по ИНН
+checkInn (STRING[12] cid) = GROUP LAST LegalEntity o ORDER o BY INN(o);
+
+rewriteUidLegalEntity 'Перезаписывать uid при получении' = DATA BOOLEAN ();
+
+EXTEND FORM integrationData PROPERTIES () rewriteUidLegalEntity;    
+   
+DESIGN integrationData {
+    enterpriseData {
+        NEW cntOther BEFORE cGrid {
+            caption = 'Дополнительно';
+            MOVE PROPERTY (rewriteUidLegalEntity());
+        }
+    }
+}
+
+// основной метод обработки
+overReceive(Configuration c) + {
+    LOCAL ob = LegalEntity ();
+    // организации
+    // для каждого объекта (отдельного клиента, отдельного документа) существует свой уникальный UID
+    // группируем по UID (GROUP MAX) и таблицу для FOR попадут только уникальные уникальные элементы массива с индексом i
+    // по условию, что такой ИНН не существует (checkInn)
+        FOR INTEGER i = [GROUP MAX INTEGER j BY uidPartnerPaymentOrder(j)](ISTRING[36] d) AND  
+            NOT object(uidPartnerPaymentOrder(i)) AND NOT checkInn(innPartnerPaymentOrder(i)) DO NEW le = LegalEntity.LegalEntity {
+                NEW ob = Customer {
+                    uid(le) <- uidPartnerPaymentOrder(i);
+                    Customer.name(ob) <- ISTRING[250](namePartnerPaymentOrder(i));
+                    LegalEntity.customer(le) <- ob;
+                    LegalEntity.name(le) <- ISTRING[250](namePartnerPaymentOrder(i));
+                    LegalEntity.fullName(le) <- ISTRING[250](fullNamePartnerPaymentOrder(i));
+                    LegalEntityFit.INN(le) <- STRING[12](innPartnerPaymentOrder(i));
+                    LegalEntityFit.KPP(le) <- STRING[9](kppPartnerPaymentOrder(i));
+                }
+        } 
+        // обратная синронизация по ИНН: Если организация существует по ИНН, то переписываем для нее UID
+        // тогда для платежек всяегда будут свои организации
+        FOR INTEGER i = [GROUP MAX INTEGER j BY uidPartnerPaymentOrder(j)](ISTRING[36] d) AND 
+            NOT object(uidPartnerPaymentOrder(i)) AND rewriteUidLegalEntity() AND LegalEntity le = checkInn(innPartnerPaymentOrder(i)) DO {
+            uid(le) <- uidPartnerPaymentOrder(i);
+        }
+    // платежи
+    FOR uidPaymentOrder(INTEGER i) AND NOT object(uidPaymentOrder(i)) DO NEW p = Payment.Payment { uid(p) <- uidPaymentOrder(i); }
+    FOR Payment.Payment p = object(uidPaymentOrder(INTEGER i)) AS Payment  DO {
+        Payment.number(p) <- STRING[15](idPaymentOrder(i));
+        Payment.date(p) <- toDateFormat(datePaymentOrder(i),'YYYY-MM-DD');
+        Payment.sum(p) <- NUMERIC[16,5](sumPaymentOrder(i));
+        Payment.note(p) <- ISTRING[100](purposePaymentDetail(i));
+        legalEntity(p) <- object(uidPartnerPaymentOrder(i))  AS LegalEntity;
+    }
+// отладка приема данных
+// --------------------------------------------------------
+//    SHOW viewClient DOCKED ;
+//    CANCEL ;   
+}
+

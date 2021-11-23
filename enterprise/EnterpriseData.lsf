@@ -1,0 +1,617 @@
+MODULE EnterpriseData;
+
+REQUIRE Time, Utils, MasterData, SystemEvents;
+
+NAMESPACE EnterpriseData;
+
+dateTimeToString = FORMULA STRING 'to_char($1, \'YYYY-MM-DD"T"HH24:MI:SS\')';
+dateToString = FORMULA STRING 'to_char($1, \'YYYY-MM-DD\')';
+
+@defineStaticObject(objectExchange, 'Объект синхронзации');
+
+CLASS Configuration 'Конфигурация';
+TABLE configuration (Configuration);
+
+countConfigurations () = GROUP SUM 1 IF Configuration c IS Configuration;
+CONSTRAINT DROPPED(Configuration c IS Configuration) AND NOT countConfigurations() MESSAGE 'Нельзя удалить единственную конфигурацию';
+ 
+dataSomeConfigurations 'Несколько конфигураций' = DATA BOOLEAN (); 
+someConfigurations 'Несколько конфигураций' () = OVERRIDE dataSomeConfigurations(), NOT countConfigurations() = 1;
+
+name 'Наименование' = DATA STRING[30] (Configuration);
+idSended 'Номер переданного сообщения' = DATA INTEGER (Configuration);
+isSended 'Сообщение передано' = DATA BOOLEAN (Configuration);
+idTicket 'Получена квитанция' = DATA INTEGER (Configuration);
+
+WHEN LOCAL CHANGED(idSended(Configuration c)) AND NOT idSended(c) > idTicket(c) DO idTicket(c) <- idSended(c);
+
+idReceived 'Номер принятого сообщения' = DATA INTEGER (Configuration);
+isReceived 'Сообщение принято' = DATA BOOLEAN (Configuration);
+
+dateStartExchange 'Дата начала обмена' = DATA DATE (Configuration);
+
+toBase 'Префикс внешней базы' = DATA STRING[2] (Configuration) CHARWIDTH 4;
+
+inSending 'Передавать' = DATA BOOLEAN (ObjectExchange, Configuration);
+inSendingTag (ObjectExchange e, Configuration c) = IF inSending(e, c) THEN '*' ELSE '';
+
+inReceiving 'Принимать' = DATA BOOLEAN (ObjectExchange, Configuration);
+inReceivingTag (ObjectExchange e, Configuration c) = IF inReceiving(e, c) THEN '*' ELSE '';
+
+fromBase 'Префикс этой базы' = DATA STRING[2] () CHARWIDTH 4;
+fromBase 'Префикс этой базы' (Configuration c) = fromBase() IF c IS Configuration;
+
+currentDateTimeString(Configuration c) = dateTimeToString(currentDateTime()) IF c IS Configuration;
+availableVersion (Configuration c) = '1.5' IF c IS Configuration;
+format (Configuration c) = 'http://v8.1c.ru/edi/edi_stnd/EnterpriseData/1.5' IF c IS Configuration;
+exchangePlan (Configuration c) = 'СинхронизацияДанныхЧерезУниверсальныйФормат' IF c IS Configuration;
+messageNo (Configuration c) = OVERRIDE idSended(c), 0 IF c IS Configuration;
+receivedNo (Configuration c) = OVERRIDE idReceived(c), 0 IF c IS Configuration;
+prefix (Configuration c) = fromBase() IF c IS Configuration;
+
+path 'Путь обмена' () = DATA STRING ();
+dataPath 'Путь обмена' = DATA STRING (Configuration);
+path 'Путь обмена' (Configuration c) = OVERRIDE dataPath(c), path();
+
+sendPath (Configuration c) = path(c) + 'Message_' + fromBase(c) + '_' + toBase(c);
+receivePath (Configuration c) = path(c) + 'Message_' + toBase(c) + '_' + fromBase(c);
+
+// exchange properties
+CLASS ABSTRACT EnterpriseData 'Универсальный обмен 1С';
+TABLE enterpriseData (EnterpriseData);
+TABLE configurationEnterpriseData (Configuration, EnterpriseData);
+
+uid 'Ссылка' = DATA STRING[36] (EnterpriseData) INDEXED;
+object 'Объект ЕД' (STRING[36] id) = GROUP AGGR EnterpriseData ed BY uid(ed);
+
+skipUid = ABSTRACT BOOLEAN (EnterpriseData);
+sendUid (EnterpriseData ed) = uid(ed) IF NOT skipUid(ed);
+
+WHEN SET (EnterpriseData ed IS EnterpriseData) AND NOT uid(ed) DO {
+    generateUUID();
+    uid(ed) <- STRING[36](generatedUUID());
+}
+
+date 'Дата' = ABSTRACT MULTI OVERRIDE DATE (EnterpriseData) MATERIALIZED INDEXED;
+desc 'Описание' = ABSTRACT MULTI OVERRIDE STRING (EnterpriseData);
+
+isDeleted 'Пометка удаления' = ABSTRACT BOOLEAN (EnterpriseData);
+
+packet 'Пакет' = DATA INTEGER (Configuration, EnterpriseData) INDEXED;
+WHEN CHANGED (isDeleted(EnterpriseData ed)) AND ed IS EnterpriseData DO packet(Configuration c, ed) <- NULL;
+
+CLASS ABSTRACT Reference : EnterpriseData;
+CLASS ABSTRACT Document 'Документ' : EnterpriseData;
+
+inSending 'Передавать' = ABSTRACT MULTI OVERRIDE BOOLEAN (Configuration, EnterpriseData) MATERIALIZED;
+
+in 'Вкл.' = DATA BOOLEAN (Configuration, EnterpriseData);
+ 
+WHEN SET(inSending(Configuration c, EnterpriseData e) AND NOT packet(c, e) <= idTicket(c)) AND NOT date(e) < dateStartExchange(c) DO in(c, e) <- inSending(c, e);
+
+in (Configuration c) = GROUP MAX EnterpriseData e IF in(c,e);
+empty (Configuration c) = c IS Configuration AND NOT in(c); 
+empyBody (Configuration c) = '' IF empty(c); 
+
+GROUP header EXTID 'msg:Header';
+GROUP confirmation EXTID 'msg:Confirmation' : header;
+GROUP availableObjectTypes EXTID 'msg:AvailableObjectTypes' : header;
+GROUP body EXTID '=http://v8.1c.ru/edi/edi_stnd/EnterpriseData/1.5:Body';
+
+GROUP keyProperties EXTID 'КлючевыеСвойства';
+
+GROUP product EXTID 'Товары';
+GROUP service EXTID 'Услуги';
+GROUP paymentCard EXTID 'ОплатаПлатежнымиКартами';
+GROUP reason EXTID 'ДокументыОснования';
+GROUP reasonDocument EXTID 'ДокументОснование';
+GROUP records EXTID 'Записи';
+
+GROUP item EXTID 'Номенклатура';
+
+FORM sendMessage FORMEXTID 'Message'
+    PROPERTIES ATTR = 'http://www.1c.ru/SSL/Exchange/Message' EXTID 'xmlns:msg'
+    PROPERTIES ATTR = 'http://www.w3.org/2001/XMLSchema' EXTID 'xmlns:xs'
+    PROPERTIES ATTR = 'http://www.w3.org/2001/XMLSchema-instance' EXTID 'xmlns:xsi'
+
+    OBJECTS configuration = Configuration
+    PROPERTIES (configuration) IN header format EXTID 'msg:Format', currentDateTimeString EXTID 'msg:CreationDate'
+    PROPERTIES (configuration) IN confirmation exchangePlan EXTID 'msg:ExchangePlan', toBase EXTID 'msg:To', fromBase EXTID 'msg:From', messageNo EXTID 'msg:MessageNo', receivedNo EXTID 'msg:ReceivedNo'
+    PROPERTIES (configuration) IN header availableVersion EXTID 'msg:AvailableVersion'
+
+    OBJECTS objectExchange = ObjectExchange EXTID 'msg:ObjectType' IN availableObjectTypes
+    PROPERTIES  name(objectExchange) EXTID 'msg:Name', inSendingTag(objectExchange, configuration) EXTID 'msg:Sending', inReceivingTag(objectExchange, configuration) EXTID 'msg:Receiving'
+    FILTERS inSending(objectExchange, configuration) OR inReceiving(objectExchange, configuration)
+    
+    PROPERTIES (configuration) IN header prefix EXTID 'msg:Prefix'
+    
+    PROPERTIES empyBody(configuration) EXTID '=http://v8.1c.ru/edi/edi_stnd/EnterpriseData/1.5:Body'
+;
+
+idReceivedTicket = DATA LOCAL INTEGER ();
+idReceivedTemp = DATA LOCAL INTEGER ();
+
+FORM receiveMessage FORMEXTID 'Message'
+    PROPERTIES () IN confirmation idReceivedTemp EXTID 'msg:MessageNo', idReceivedTicket EXTID 'msg:ReceivedNo'
+;
+
+overReceive ABSTRACT LIST (Configuration);
+overImport ABSTRACT LIST (Configuration);
+
+generateUid 'Генерировать UID' () {
+    NEWSESSION {
+        FOR EnterpriseData e IS EnterpriseData AND NOT uid(e) DO {
+            generateUUID();
+            uid(e) <- STRING[36](generatedUUID());
+        }
+        APPLY;
+    }
+} CONFIRM;
+
+receiveMessage 'Получить' (Configuration c) {
+    NEWSESSION {
+        LOCAL f = XMLFILE ();
+        TRY {
+            READ receivePath(c) + '.xml' TO f;
+            IMPORT receiveMessage XML FROM f();
+            overImport(c);
+            IF idReceivedTemp() AND NOT idReceivedTemp() <= idReceived(c) THEN {
+                idReceived(c) <- idReceivedTemp();
+                isReceived(c) <- TRUE;
+                overReceive(c);
+                in (c, EnterpriseData e) <- NULL WHERE inSending(c, e) AND packet(c, e) <= idReceivedTicket();
+                idTicket(c) <- idReceivedTicket();
+            } ELSE {
+                isReceived(c) <- NULL;    
+            }
+            APPLY; 
+        } CATCH {
+            MESSAGE System.messageCaughtException();
+            NEWSESSION APPLY { isReceived(c) <- NULL; }
+        }
+    }
+}
+
+overSend ABSTRACT LIST (Configuration);
+
+sendMessage 'Передать' (Configuration c) {
+    NEWSESSION {
+        TRY {
+            idSended(c) <- messageNo(c) (+) 1;
+            LOCAL f = XMLFILE ();
+            EXPORT sendMessage OBJECTS configuration = c XML TO f;
+            WRITE f() TO sendPath(c);
+            isSended(c) <- TRUE;
+            packet(c, EnterpriseData e) <- messageNo(c) WHERE in(c, e);
+            overSend(c);
+            APPLY;
+        } CATCH {
+            MESSAGE System.messageCaughtException();
+            NEWSESSION APPLY { isSended(c) <- NULL; }
+            CANCEL;
+        }
+    }
+}
+
+FORM objectExchange 'Настройки синхронизации'
+    OBJECTS c = Configuration, o = ObjectExchange
+    PROPERTIES name(o) READONLY, inSending(o, c), inReceiving(o, c)
+    ORDERS name(o)
+    
+    OBJECTS e = EnterpriseData
+    PROPERTIES desc(e) READONLY, packet(c,e) READONLY, in(c, e)
+    FILTERS inSending(c, e) OR in(c, e);
+;
+
+showOptions 'Настройки' (Configuration c) {
+    SHOW objectExchange OBJECTS c = c WAIT MANAGESESSION;
+}
+
+FORM configuration 'Конфигурация'
+    OBJECTS c = Configuration PANEL
+    PROPERTIES (c) name, dateStartExchange, toBase, path
+
+    EDIT Configuration OBJECT c;
+;
+
+EXTEND FORM integrationData
+    OBJECTS c = Configuration
+
+    PROPERTIES () someConfigurations, fromBase, path
+
+    PROPERTIES (c) PANEL
+               panelIdSended = idSended BACKGROUND (IF isSended(c) THEN RGB(225,255,225) ELSE RGB(255, 225, 225)),
+               panelIdReceived = idReceived BACKGROUND (IF isReceived(c) THEN RGB(225,255,225) ELSE RGB(255, 225, 225)),
+               panelDataStartExchange = dateStartExchange, panelToBase = toBase
+               
+    PROPERTIES (c) SHOWIF someConfigurations() 
+               name,
+               idSended BACKGROUND (IF isSended(c) THEN RGB(225,255,225) ELSE RGB(255, 225, 225)),
+               idReceived BACKGROUND (IF isReceived(c) THEN RGB(225,255,225) ELSE RGB(255, 225, 225)),
+               dateStartExchange, toBase, path
+    PROPERTIES (c) SHOWIF someConfigurations() NEWSESSION NEW, EDIT, DELETE
+    
+    PROPERTIES sendMessage(c), receiveMessage(c), showOptions(c), generateUid() DRAW c    
+;
+
+DESIGN integrationData {
+    pane {
+        NEW enterpriseData {
+            caption = 'Обмен 1С';
+            MOVE BOX (c);
+            NEW status {
+                type = CONTAINERH;
+                MOVE PROPERTY (panelIdSended);
+                MOVE PROPERTY (panelIdReceived);
+            }
+            NEW basic {
+                type = CONTAINERH;      
+                MOVE PROPERTY (panelDataStartExchange);
+                MOVE PROPERTY (panelToBase);
+                MOVE PROPERTY (fromBase());
+            }
+            MOVE PROPERTY (path());
+            NEW cGrid {
+                fill = 1;
+                MOVE BOX (c);
+            }
+            NEW buttons {
+                type = CONTAINERH;
+                MOVE PROPERTY (sendMessage(c));
+                MOVE PROPERTY (receiveMessage(c));
+                MOVE PROPERTY (generateUid());
+                MOVE PROPERTY (showOptions(c));
+                MOVE PROPERTY (someConfigurations());
+            }
+        }
+    }
+}
+
+// todo - убрать после миграции
+packet 'Пакет' = DATA INTEGER (EnterpriseData) INDEXED;
+
+idSended 'Номер переданного сообщения' () = DATA INTEGER ();
+isSended 'Сообщение передано' () = DATA BOOLEAN ();
+
+idReceived 'Номер принятого сообщения' () = DATA INTEGER ();
+isReceived 'Сообщение принято' () = DATA BOOLEAN ();
+
+idTicket 'Получена квитанция' = DATA INTEGER ();
+
+dateStartExchange 'Дата начала обмена' () = DATA DATE ();
+ 
+toBase 'Префикс внешней базы' = DATA STRING[2] () CHARWIDTH 4;
+
+onStarted() + {
+    IF NOT [GROUP MAX Configuration c IF c IS Configuration]() THEN NEWSESSION NEW conf = Configuration {
+        name(conf) <- 'Первая конфигурация';
+        idSended(conf) <- idSended();
+        isSended(conf) <- isSended();
+        idReceived(conf) <- idReceived();
+        isReceived(conf) <- isReceived();
+        
+        toBase(conf) <- toBase();
+        packet(conf, EnterpriseData ed) <- packet(ed);
+        idTicket(conf) <- idTicket();
+        APPLY;
+    } 
+}
+
+GROUP link EXTID 'СсылкаНаОбъект';
+GROUP linkInLink EXTID 'СсылкаНаОбъект' : link;
+
+META defProp(name, caption, type, class)
+    name caption = ABSTRACT type (###class);
+    WHEN CHANGED(name(###class d)) DO {
+        packet(Configuration c, d) <- NULL WHERE c IS Configuration;
+        in(Configuration c, d) <- TRUE WHERE inSending(c, d) AND NOT date(d) < dateStartExchange(c);  
+    }
+    
+    name###class caption = DATA LOCAL STRING (INTEGER);
+END
+
+META defPropDetail(name, caption, type, class, table)
+    name caption = ABSTRACT type (###class###table);
+    WHEN CHANGED(name(###class###table d)) DO {
+        packet(Configuration c, class(d)) <- NULL WHERE c IS Configuration;
+        in(Configuration c, class(d)) <- TRUE WHERE inSending(c, class(d)) AND NOT date(class(d)) < dateStartExchange(c);
+    }
+    
+    name###class###table caption = DATA LOCAL STRING (INTEGER);
+END
+
+META defPropDetail(name, caption, type, class)
+    @defPropDetail(name, caption, type, class, detail);
+END
+
+META defPropObject(name, caption, type, class)
+    name caption = ABSTRACT type (###class);
+    WHEN CHANGED(name(###class d)) DO {
+        packet(Configuration c, d) <- NULL WHERE c IS Configuration;
+        in(Configuration c, d) <- TRUE WHERE inSending(c, d) AND NOT date(d) < dateStartExchange(c);  
+    }
+    
+    name###class caption = DATA LOCAL INTEGER (INTEGER);
+    
+    EXTEND FORM receiveMessage
+        OBJECTS name###class = INTEGER EXTID caption
+        FILTERS name###class(name###class) = class
+    ;
+    @def###type(name, class, caption);
+END
+
+META defPropObjectDetail(name, caption, type, class, table)
+    @defPropDetail(name, caption, type, class);
+    @def###type(name, class, table, caption);
+END
+
+META defPropId(name, caption, type, class)
+    @defProp(name, caption, type, ###class);
+    id###name###class caption (###class class) = staticCaption(name(class));
+    EXTEND FORM sendMessage
+        PROPERTIES (class) id###name###class EXTID caption
+    ;
+END
+
+META defPropIdDetail(name, caption, type, class, table)
+    @defPropDetail(name, caption, type, class);
+    id###name###class###table caption (###class###table class###table) = staticCaption(name(class###table));
+    EXTEND FORM sendMessage
+        PROPERTIES (class###table) id###name###class###table EXTID caption
+    ;
+END
+
+META defPropSimple(name, caption, type, class)
+    @defProp(name, caption, type, ###class);
+    EXTEND FORM sendMessage
+        PROPERTIES (class) name EXTID caption
+    ;
+    
+    EXTEND FORM receiveMessage
+        PROPERTIES (class) name###class EXTID caption
+    ; 
+END
+
+META defPropSimpleDetail(name, caption, type, class, table)
+    @defPropDetail(name, caption, type, class, table);
+    EXTEND FORM sendMessage
+        PROPERTIES (class###table) name EXTID caption
+    ;
+
+    EXTEND FORM receiveMessage
+        PROPERTIES (class###table) name###class###table EXTID caption
+    ; 
+END
+
+META defPropBoolean(name, caption, class);
+    @defProp(name, caption, BOOLEAN, ###class);
+    ##name##BooleanString (###class class) = IF name(class) THEN 'true' ELSE 'false';
+    EXTEND FORM sendMessage
+        PROPERTIES (class) ##name##BooleanString EXTID caption
+    ;
+END
+
+META extKeyProperties (nm, type, caption, group, obj, detail)
+    EXTEND FORM sendMessage
+        OBJECTS nm###obj###detail = ###type EXTID caption IN group
+        PROPERTIES(nm###obj###detail) sendUid EXTID 'Ссылка', dateTimeString EXTID 'Дата', id EXTID 'Номер'
+        FILTERS nm###obj###detail = nm(obj###detail)
+    
+        OBJECTS company###obj###detail = Company EXTID 'Организация'
+        PROPERTIES(company###obj###detail) sendUid EXTID 'Ссылка', name EXTID 'Наименование', fullName EXTID 'НаименованиеПолное', inn EXTID 'ИНН', kpp EXTID 'КПП', idType EXTID 'ЮридическоеФизическоеЛицо'
+        FILTERS company###obj###detail = company(nm###obj###detail)
+    ;   
+END
+
+META extKeyProperties (type, caption, group, obj, detail)
+    @extKeyProperties (type, ###type, caption, group, obj, detail);
+END
+
+META extDeleteObject(objtype, caption)
+    EXTEND FORM sendMessage
+        OBJECTS objtype##Deleted = ###objtype EXTID 'УдалениеОбъекта' IN body
+        PROPERTIES(objtype##Deleted) IN link IN linkInLink sendUid EXTID caption
+        FILTERS sendUid(objtype##Deleted), EnterpriseData.isDeleted(objtype##Deleted)
+        
+        FILTERS in(configuration, objtype)
+    ;
+END
+
+META extTable(class, group)
+    CLASS ABSTRACT ###class###group : ###class##Detail;
+    
+    is###group = ABSTRACT BOOLEAN (###class###group);
+    
+    EXTEND FORM sendMessage  
+        OBJECTS class###group = ###class###group EXTID 'Строка' IN group
+        FILTERS in(class, class###group), is###group(class###group)
+    ;
+
+    class###group = DATA LOCAL INTEGER (INTEGER);
+    
+    EXTEND FORM receiveMessage
+        OBJECTS class###group = INTEGER EXTID 'Строка' IN group
+        FILTERS class###group(class###group) = class
+    ;
+END
+
+META extDocument(doctype, caption)
+    
+    EXTEND CLASS ObjectExchange { doctype 'Документ.'##caption }
+    
+    CLASS ABSTRACT ###doctype 'Документ.'##caption : Document;
+    
+    date (###doctype doctype) += DATE(dateTime(doctype));
+    desc (###doctype doctype) += STRING (CONCAT ' ', caption, 'от ' + date (doctype), '№ ' + id(doctype));
+    
+    inSending (Configuration configuration, ###doctype doctype) += inSending(ObjectExchange.doctype, configuration) IF doctype IS ###doctype;
+    
+    CLASS ABSTRACT ###doctype##Detail 'Строка';
+    
+    ##doctype = ABSTRACT ###doctype (###doctype##Detail);
+    in (###doctype ##doctype, ###doctype##Detail ##doctype##Detail) = ##doctype(##doctype##Detail) == ##doctype; 
+    
+    @defProp(company, 'Организация', Company, ###doctype);
+    
+    EXTEND FORM sendMessage
+        OBJECTS doctype = ###doctype EXTID 'Документ.'##caption IN body
+        PROPERTIES(doctype) IN keyProperties sendUid EXTID 'Ссылка', dateTimeString EXTID 'Дата', id EXTID 'Номер'
+        FILTERS dateTimeString(doctype), id(doctype), NOT EnterpriseData.isDeleted(doctype)
+       
+        OBJECTS company###doctype = Company EXTID 'Организация' IN keyProperties
+        PROPERTIES(company###doctype) sendUid EXTID 'Ссылка', name EXTID 'Наименование', fullName EXTID 'НаименованиеПолное', inn EXTID 'ИНН', kpp EXTID 'КПП', idType EXTID 'ЮридическоеФизическоеЛицо'
+        FILTERS company###doctype = company(doctype)
+        
+        FILTERS in(configuration, doctype)
+    ;
+
+    uid###doctype = DATA LOCAL ISTRING[36](INTEGER);
+    id###doctype = DATA LOCAL ISTRING (INTEGER);
+    date###doctype = DATA LOCAL STRING (INTEGER);
+
+    EXTEND FORM receiveMessage
+        OBJECTS doctype = INTEGER EXTID 'Документ.'##caption IN body
+        PROPERTIES (doctype) IN keyProperties
+                uid###doctype EXTID 'Ссылка', id###doctype EXTID 'Номер', date###doctype EXTID 'Дата'
+    ;
+
+    @extDeleteObject(doctype, caption##'Ссылка');
+END
+
+//all reference
+META extReference(reftype, capt)
+    EXTEND CLASS ObjectExchange { reftype 'Справочник.'##capt }
+    
+    CLASS ABSTRACT ###reftype 'Справочник.'##capt : Reference;
+    
+    desc (###reftype reftype) += STRING (CONCAT ' ', capt, name(reftype), 'Код ' + id(reftype));
+    
+    CLASS ABSTRACT ###reftype##Detail 'Строка';
+    ##reftype = ABSTRACT ###reftype (###reftype##Detail);
+    in (###reftype ##reftype, ###reftype##Detail ##reftype##Detail) = ##reftype(##reftype##Detail) = ##reftype; 
+
+    // send
+    inSending (Configuration configuration, ###reftype reftype) += inSending(ObjectExchange.reftype, configuration) IF reftype IS ###reftype;
+
+    EXTEND FORM sendMessage
+        OBJECTS reftype = ###reftype EXTID 'Справочник.'##capt IN body
+        PROPERTIES(reftype) IN keyProperties sendUid EXTID 'Ссылка'
+        FILTERS in(configuration, reftype), NOT EnterpriseData.isDeleted(reftype)
+    ;
+
+    // receive
+    uid###reftype = DATA LOCAL ISTRING[36](INTEGER);
+    name###reftype = DATA LOCAL ISTRING(INTEGER);
+    
+    EXTEND FORM receiveMessage
+        OBJECTS reftype = INTEGER EXTID 'Справочник.'##capt IN body
+    
+        PROPERTIES (reftype) IN keyProperties
+                uid###reftype EXTID 'Ссылка',
+                name###reftype EXTID 'Наименование'
+    ;
+
+    @extDeleteObject(reftype, capt##'Ссылка');
+
+END
+
+// static types
+META defStaticType (id, caption)
+    @defineStaticObject(###id, caption);
+    id (STRING s) = GROUP AGGR ###id id BY name(id);
+END
+
+META defStaticTypeValue (class, id, caption)
+    EXTEND CLASS ###class { id caption };
+    is###id###class (###class class) = class = ###class.id;
+    is###id###class (STRING s) = is###id###class(class(s));
+END
+
+@defStaticType (typePartner, 'ЮридическоеФизическоеЛицо');
+@defStaticTypeValue (typePartner, legalEntity, 'ЮридическоеЛицо');
+@defStaticTypeValue (typePartner, individual, 'ФизическоеЛицо');
+
+@defStaticType(typeStock, 'ВидыСкладов');
+@defStaticTypeValue(typeStock, nonAutomatedShop, 'НеавтоматизированнаяТорговаяТочка');
+@defStaticTypeValue(typeStock, warehouse, 'Оптовый');
+@defStaticTypeValue(typeStock, retail, 'Розничный');
+
+@defStaticType(typeContract, 'ВидыДоговоров');
+@defStaticTypeValue(typeContract, other, 'Прочее');
+@defStaticTypeValue(typeContract, agent, 'СКомиссионером');
+@defStaticTypeValue(typeContract, purchaseAgent, 'СКомиссионеромНаЗакупку');
+@defStaticTypeValue(typeContract, consignor, 'СКомитентом');
+@defStaticTypeValue(typeContract, purchaseConsignor, 'СКомитентомНаЗакупку');
+@defStaticTypeValue(typeContract, customer, 'СПокупателем');
+@defStaticTypeValue(typeContract, supplier, 'СПоставщиком');
+
+@defStaticType(typePurchaseInvoice, 'ВидыОперацийПоступленияТоваров');
+@defStaticTypeValue(typePurchaseInvoice, import, 'ЗакупкаПоИмпорту');
+@defStaticTypeValue(typePurchaseInvoice, delivery, 'ПокупкаУПоставщика');
+@defStaticTypeValue(typePurchaseInvoice, commission, 'ПриемНаКомиссию');
+
+@defStaticType(typeSaleInvoice, 'ВидыОперацийРеализацияТоваровУслуг');
+@defStaticTypeValue(typeSaleInvoice, sale, 'РеализацияКлиенту');
+@defStaticTypeValue(typeSaleInvoice, commission, 'ПередачаНаКомиссию');
+@defStaticTypeValue(typeSaleInvoice, shipmentTransit, 'ОтгрузкаБезПереходаПравСобственности_ВПути');
+@defStaticTypeValue(typeSaleInvoice, shipmentSale, 'ОтгрузкаБезПереходаПравСобственности_Реализовано');
+
+@defStaticType(typeInventory, 'ТипЗапасов');
+@defStaticTypeValue(typeInventory, revolvingPackage, 'ОборотнаяТара');
+@defStaticTypeValue(typeInventory, finishedProduct, 'ГотоваяПродукция');
+@defStaticTypeValue(typeInventory, contractorMaterial, 'ДавальческиеСырьеИМатериалы');
+@defStaticTypeValue(typeInventory, sparePart, 'ЗапасныеЧасти');
+@defStaticTypeValue(typeInventory, commissionItem, 'КомиссионныеТовары');
+@defStaticTypeValue(typeInventory, purchaseItem, 'ПокупныеИзделия');
+@defStaticTypeValue(typeInventory, purchaseSemifinishedProduct, 'ПокупныеПолуфабрикатыИКомплектующие');
+@defStaticTypeValue(typeInventory, goods, 'СобственныеТовары');
+@defStaticTypeValue(typeInventory, uniform, 'СпецоснасткаИСпецодеждаНаСкладе');
+@defStaticTypeValue(typeInventory, buildingMaterial, 'СтроительныеМатериалы');
+@defStaticTypeValue(typeInventory, material, 'СырьеИМатериалы');
+@defStaticTypeValue(typeInventory, fuel, 'Топливо');
+
+@defStaticType(typePurchaseReturnInvoice, 'ВидыОперацийВозвратПоставщику');
+@defStaticTypeValue(typePurchaseReturnInvoice, delivery, 'ВозвратПоставщику');
+@defStaticTypeValue(typePurchaseReturnInvoice, commission, 'ВозвратКомитенту');
+
+@defStaticType(typeSaleReturnInvoice, 'ВидыОперацийВозвратОтПокупателя');
+@defStaticTypeValue(typeSaleReturnInvoice, customer, 'ВозвратОтКлиента');
+@defStaticTypeValue(typeSaleReturnInvoice, commission, 'ВозвратОтКомиссионера');
+@defStaticTypeValue(typeSaleReturnInvoice, retailCustomer, 'ВозвратОтРозничногоПокупателя');
+
+@defStaticType(typeOutcomeCashOrderBank, );
+@defStaticTypeValue(typeOutcomeCashOrderBank, collection, 'Инкассация');
+@defStaticTypeValue(typeOutcomeCashOrderBank, cash, 'ВзносНаличными');
+
+@defStaticType(typeVat, 'СтавкиНДС');
+@defStaticTypeValue(typeVat, vat4, 'НДС4');
+@defStaticTypeValue(typeVat, vat4d104, 'НДС4_104');
+@defStaticTypeValue(typeVat, vat18, 'НДС18');
+@defStaticTypeValue(typeVat, vat18d118, 'НДС18_118');
+@defStaticTypeValue(typeVat, vat2, 'НДС2');
+@defStaticTypeValue(typeVat, vat2d102, 'НДС2_102');
+@defStaticTypeValue(typeVat, vat10, 'НДС10');
+@defStaticTypeValue(typeVat, vat10d110, 'НДС10_110');
+@defStaticTypeValue(typeVat, vat0, 'НДС0');
+@defStaticTypeValue(typeVat, vat20, 'НДС20');
+@defStaticTypeValue(typeVat, vat20d120, 'НДС20_120');
+@defStaticTypeValue(typeVat, withoutVat, 'БезНДС');
+
+@defStaticType(typeVatInvoice, 'ВидыСчетаФактуры');
+@defStaticTypeValue(typeVatInvoice, sale, 'НаРеализацию');
+@defStaticTypeValue(typeVatInvoice, adjustment, 'Корректировочный');
+@defStaticTypeValue(typeVatInvoice, advance, 'НаАванс');
+@defStaticTypeValue(typeVatInvoice, advanceCommission, 'НаАвансКомитента');
+@defStaticTypeValue(typeVatInvoice, amountDifference, 'СуммовыеРазницы');
+@defStaticTypeValue(typeVatInvoice, taxOfficial, 'НалоговыйАгент');
+@defStaticTypeValue(typeVatInvoice, purchase, 'НаПоступление');
+
+@defStaticType(typeInvoiced, 'СпособыВыставленияСчетаФактуры');
+@defStaticTypeValue(typeInvoiced, eDoc, 'ВЭлектронномВиде');
+@defStaticTypeValue(typeInvoiced, paper, 'НаБумажномНосителе');
+
+@defStaticType(typeItem, 'ТипыНоменклатуры');
+@defStaticTypeValue(typeItem, product, 'Товар');
+@defStaticTypeValue(typeItem, revolvingPackage, 'МногооборотнаяТара');
+@defStaticTypeValue(typeItem, service, 'Услуга');
+@defStaticTypeValue(typeItem, work, 'Работа');
