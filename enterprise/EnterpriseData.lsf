@@ -106,6 +106,10 @@ GROUP paymentCard EXTID 'ОплатаПлатежнымиКартами';
 GROUP reason EXTID 'ДокументыОснования';
 GROUP reasonDocument EXTID 'ДокументОснование';
 GROUP records EXTID 'Записи';
+GROUP saleDocument EXTID 'ДокументРеализации';
+GROUP correctedSaleDocument EXTID 'ИсправляемыйДокументРеализации';
+GROUP specification EXTID 'Характеристика';
+GROUP commonData EXTID 'ОбщиеДанные';
 
 GROUP item EXTID 'Номенклатура';
 
@@ -306,8 +310,6 @@ META defProp(name, caption, type, class)
         packet(Configuration c, d) <- NULL WHERE c IS Configuration;
         in(Configuration c, d) <- TRUE WHERE inSending(c, d) AND NOT date(d) < dateStartExchange(c);  
     }
-    
-    name###class caption = DATA LOCAL STRING (INTEGER);
 END
 
 META defPropDetail(name, caption, type, class, table)
@@ -346,11 +348,12 @@ META defPropObjectDetail(name, caption, type, class, table)
 END
 
 META defPropId(name, caption, type, class)
-    @defProp(name, caption, type, ###class);
+    @defProp(name, caption, ###type, ###class);
+    id###name###class caption = DATA LOCAL STRING (INTEGER);
+    name###class caption (INTEGER i) = type(id###name###class(i)); 
     id###name###class caption (###class class) = staticCaption(name(class));
-    EXTEND FORM sendMessage
-        PROPERTIES (class) id###name###class EXTID caption
-    ;
+    EXTEND FORM sendMessage PROPERTIES id###name###class(class) EXTID caption;
+    EXTEND FORM receiveMessage PROPERTIES id###name###class(class) EXTID caption;
 END
 
 META defPropIdDetail(name, caption, type, class, table)
@@ -363,13 +366,9 @@ END
 
 META defPropSimple(name, caption, type, class)
     @defProp(name, caption, type, ###class);
-    EXTEND FORM sendMessage
-        PROPERTIES (class) name EXTID caption
-    ;
-    
-    EXTEND FORM receiveMessage
-        PROPERTIES (class) name###class EXTID caption
-    ; 
+    name###class caption = DATA LOCAL STRING (INTEGER);
+    EXTEND FORM sendMessage PROPERTIES name(class) EXTID caption;
+    EXTEND FORM receiveMessage PROPERTIES name###class(class) EXTID caption; 
 END
 
 META defPropSimpleDetail(name, caption, type, class, table)
@@ -385,13 +384,37 @@ END
 
 META defPropBoolean(name, caption, class);
     @defProp(name, caption, BOOLEAN, ###class);
+    name###class caption = DATA LOCAL STRING (INTEGER);
     ##name##BooleanString (###class class) = IF name(class) THEN 'true' ELSE 'false';
     EXTEND FORM sendMessage
         PROPERTIES (class) ##name##BooleanString EXTID caption
     ;
 END
 
-META extKeyProperties (nm, type, caption, group, obj, detail)
+META defKeyPropSimple (nm, caption, type, group, class)
+    @defProp(nm, caption, type, class);
+    nm###class caption = DATA LOCAL STRING (INTEGER);
+    
+    EXTEND FORM sendMessage PROPERTIES nm(class) IN group EXTID caption;
+    EXTEND FORM receiveMessage PROPERTIES nm###class(class) IN group EXTID caption;
+END
+
+META defKeyPropSimple (nm, caption, class)
+    @defKeyPropSimple(nm, caption, ISTRING, keyProperties, class);
+END
+
+META defKeyPropObject (nm, caption, type, group, class)
+    @defProp(nm, caption, type, class);
+    nm###class caption = DATA LOCAL INTEGER (INTEGER);
+    
+    EXTEND FORM receiveMessage
+        OBJECTS nm###class = INTEGER IN group EXTID caption
+        FILTERS nm###class(nm###class) = class
+    ;
+    @def###type(nm, class, group, caption);
+END
+
+META extKeyPropertiesDetail (nm, type, caption, group, obj, detail)
     EXTEND FORM sendMessage
         OBJECTS nm###obj###detail = ###type EXTID caption IN group
         PROPERTIES(nm###obj###detail) sendUid EXTID 'Ссылка', dateTimeString EXTID 'Дата', id EXTID 'Номер'
@@ -403,8 +426,8 @@ META extKeyProperties (nm, type, caption, group, obj, detail)
     ;   
 END
 
-META extKeyProperties (type, caption, group, obj, detail)
-    @extKeyProperties (type, ###type, caption, group, obj, detail);
+META extKeyPropertiesDetail (type, caption, group, obj, detail)
+    @extKeyPropertiesDetail (type, ###type, caption, group, obj, detail);
 END
 
 META extDeleteObject(objtype, caption)
@@ -484,7 +507,7 @@ META extReference(reftype, capt)
     
     CLASS ABSTRACT ###reftype 'Справочник.'##capt : Reference;
     
-    desc (###reftype reftype) += STRING (CONCAT ' ', capt, name(reftype), 'Код ' + id(reftype));
+    desc (###reftype reftype) += STRING (CONCAT ' ', capt, 'Код ' + id(reftype));
     
     CLASS ABSTRACT ###reftype##Detail 'Строка';
     ##reftype = ABSTRACT ###reftype (###reftype##Detail);
@@ -501,18 +524,14 @@ META extReference(reftype, capt)
 
     // receive
     uid###reftype = DATA LOCAL ISTRING[36](INTEGER);
-    name###reftype = DATA LOCAL ISTRING(INTEGER);
     
     EXTEND FORM receiveMessage
         OBJECTS reftype = INTEGER EXTID 'Справочник.'##capt IN body
     
-        PROPERTIES (reftype) IN keyProperties
-                uid###reftype EXTID 'Ссылка',
-                name###reftype EXTID 'Наименование'
+        PROPERTIES (reftype) IN keyProperties uid###reftype EXTID 'Ссылка'
     ;
 
     @extDeleteObject(reftype, capt##'Ссылка');
-
 END
 
 // static types
@@ -556,6 +575,10 @@ END
 @defStaticTypeValue(typeSaleInvoice, shipmentTransit, 'ОтгрузкаБезПереходаПравСобственности_ВПути');
 @defStaticTypeValue(typeSaleInvoice, shipmentSale, 'ОтгрузкаБезПереходаПравСобственности_Реализовано');
 
+@defStaticType(typeSaleCreditNote, 'ВидыОперацийРеализацияТоваровУслуг');
+@defStaticTypeValue(typeSaleCreditNote, correction, 'ИсправлениеОшибки');
+@defStaticTypeValue(typeSaleCreditNote, modification, 'СогласованноеИзменение');
+
 @defStaticType(typeInventory, 'ТипЗапасов');
 @defStaticTypeValue(typeInventory, revolvingPackage, 'ОборотнаяТара');
 @defStaticTypeValue(typeInventory, finishedProduct, 'ГотоваяПродукция');
@@ -584,17 +607,29 @@ END
 @defStaticTypeValue(typeOutcomeCashOrderBank, cash, 'ВзносНаличными');
 
 @defStaticType(typeVat, 'СтавкиНДС');
+valueTypeVat = ABSTRACT CASE NUMERIC (TypeVat);
 @defStaticTypeValue(typeVat, vat4, 'НДС4');
+valueTypeVat (TypeVat t) += WHEN t = TypeVat.vat4 THEN 4.0;
 @defStaticTypeValue(typeVat, vat4d104, 'НДС4_104');
+valueTypeVat (TypeVat t) += WHEN t = TypeVat.vat4d104 THEN 400.0 / 104.0;
 @defStaticTypeValue(typeVat, vat18, 'НДС18');
+valueTypeVat (TypeVat t) += WHEN t = TypeVat.vat18 THEN 18.0;
 @defStaticTypeValue(typeVat, vat18d118, 'НДС18_118');
+valueTypeVat (TypeVat t) += WHEN t = TypeVat.vat18d118 THEN 1800.0 / 118.0;
 @defStaticTypeValue(typeVat, vat2, 'НДС2');
+valueTypeVat (TypeVat t) += WHEN t = TypeVat.vat2 THEN 2.0;
 @defStaticTypeValue(typeVat, vat2d102, 'НДС2_102');
+valueTypeVat (TypeVat t) += WHEN t = TypeVat.vat2d102 THEN 200.0 / 102.0;
 @defStaticTypeValue(typeVat, vat10, 'НДС10');
+valueTypeVat (TypeVat t) += WHEN t = TypeVat.vat10 THEN 10.0;
 @defStaticTypeValue(typeVat, vat10d110, 'НДС10_110');
+valueTypeVat (TypeVat t) += WHEN t = TypeVat.vat10d110 THEN 1000.0 / 110.0;
 @defStaticTypeValue(typeVat, vat0, 'НДС0');
+valueTypeVat (TypeVat t) += WHEN t = TypeVat.vat0 THEN 0.0;
 @defStaticTypeValue(typeVat, vat20, 'НДС20');
+valueTypeVat (TypeVat t) += WHEN t = TypeVat.vat20 THEN 20.0;
 @defStaticTypeValue(typeVat, vat20d120, 'НДС20_120');
+valueTypeVat (TypeVat t) += WHEN t = TypeVat.vat10d110 THEN 2000.0 / 120.0;
 @defStaticTypeValue(typeVat, withoutVat, 'БезНДС');
 
 @defStaticType(typeVatInvoice, 'ВидыСчетаФактуры');
@@ -615,3 +650,8 @@ END
 @defStaticTypeValue(typeItem, revolvingPackage, 'МногооборотнаяТара');
 @defStaticTypeValue(typeItem, service, 'Услуга');
 @defStaticTypeValue(typeItem, work, 'Работа');
+@defStaticType(typeSettlement, 'ВидыРасчетовСКонтрагентами');
+@defStaticTypeValue(typeSettlement, supplier, 'СПоставщиком');
+@defStaticTypeValue(typeSettlement, customer, 'СПокупателем');
+@defStaticTypeValue(typeSettlement, loan, 'КредитыИЗаймы');
+@defStaticTypeValue(typeSettlement, other, 'Прочие');

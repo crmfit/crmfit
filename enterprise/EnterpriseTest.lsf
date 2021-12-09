@@ -1,0 +1,62 @@
+MODULE EnterpriseTest;
+// для тестирования приема данных
+
+REQUIRE EnterpriseData, LegalEntityFit, Customer, Payment, Expense;
+
+// организации
+FORM viewLegalEntity
+    OBJECTS l = LegalEntity
+    PROPERTIES (l) READONLY uid, LegalEntity.name, LegalEntityFit.INN, LegalEntityFit.KPP
+    FILTERS uid(l) 
+    ORDERS name(l)
+;
+
+onShowLegalEntity 'Организации UID' () {
+    SHOW viewLegalEntity DOCKED;
+ }
+
+fltPayment 'Связь Платежки = Клиенты' = DATA LOCAL BOOLEAN ();
+
+
+// принятые данные, платежи
+FORM viewExpense 'Рсходы'
+    OBJECTS e = Expense LAST
+    PROPERTIES (e) READONLY uid, Expense.date, Expense.nameLegalEntity, Expense.sum, Expense.note
+    OBJECTS c = Customer LAST
+    PROPERTIES (c) READONLY Customer.name
+    OBJECTS l = LegalEntity
+    PROPERTIES (l) READONLY uid, LegalEntity.name,LegalEntity.fullName, LegalEntityFit.INN, LegalEntityFit.KPP
+    PROPERTIES () fltPayment TOOLBAR, onShowLegalEntity TOOLBAR 
+    FILTERS IF fltPayment() THEN customer(e) = c ELSE TRUE
+    FILTERS customer(l) = c
+    FILTERS uid(e)
+    EVENTS ON INIT {fltPayment() <- TRUE;}
+    ORDERS date(e)
+;
+
+// для добавления в overReceive(Configuration c) в конце обработки
+onShowTestExpense '' () {
+    SHOW viewExpense DOCKED ;
+//    CANCEL ;
+}
+
+// принятые данные, платежи
+FORM viewPayments 'Принятые платежи'
+    OBJECTS p = Payment LAST
+    PROPERTIES (p) READONLY uid, number, Payment.date, Payment.nameLegalEntity, Payment.sum, Payment.note
+    OBJECTS c = Customer LAST
+    PROPERTIES (c) READONLY Customer.name
+    OBJECTS l = LegalEntity
+    PROPERTIES (l) READONLY uid, LegalEntity.name,LegalEntity.fullName, LegalEntityFit.INN, LegalEntityFit.KPP
+    PROPERTIES () fltPayment TOOLBAR, onShowLegalEntity TOOLBAR 
+    FILTERS IF fltPayment() THEN customer(p) = c ELSE TRUE
+    FILTERS customer(l) = c
+    FILTERS uid(p)
+    EVENTS ON INIT {fltPayment() <- TRUE;}
+    ORDERS date(p)
+;
+
+onShowTestPayments '' () {
+    SHOW viewPayments DOCKED ;
+    CANCEL ;
+}
