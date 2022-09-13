@@ -1,7 +1,7 @@
 MODULE EnterpriseTest;
 // для тестирования приема данных
 
-REQUIRE EnterpriseData, LegalEntityFit, Customer, Payment, Expense;
+REQUIRE EnterpriseData, LegalEntityFit, Customer, Payment, ExpenseFit, Utils;
 
 // организации
 FORM viewLegalEntity
@@ -21,42 +21,66 @@ fltPayment 'Связь Платежки = Клиенты' = DATA LOCAL BOOLEAN (
 // принятые данные, платежи
 FORM viewExpense 'Рсходы'
     OBJECTS e = Expense LAST
-    PROPERTIES (e) READONLY uid, Expense.date, Expense.nameLegalEntity, Expense.sum, Expense.note
+    PROPERTIES (e) READONLY Expense.number, Expense.date, Expense.nameLegalEntity, Expense.sum, numberAccount 
+    OBJECTS n = Expense PANEL 
+    PROPERTIES (n) READONLY Expense.note
     OBJECTS c = Customer LAST
     PROPERTIES (c) READONLY Customer.name
     OBJECTS l = LegalEntity
-    PROPERTIES (l) READONLY uid, LegalEntity.name,LegalEntity.fullName, LegalEntityFit.INN, LegalEntityFit.KPP
+    PROPERTIES (l) READONLY LegalEntity.name,LegalEntity.fullName, LegalEntityFit.INN, LegalEntityFit.KPP
     PROPERTIES () fltPayment TOOLBAR, onShowLegalEntity TOOLBAR 
     FILTERS IF fltPayment() THEN customer(e) = c ELSE TRUE
+    FILTERS n = e
     FILTERS customer(l) = c
     FILTERS uid(e)
     EVENTS ON INIT {fltPayment() <- TRUE;}
     ORDERS date(e)
 ;
 
+DESIGN viewExpense {
+    PANEL {
+        NEW cntNote {
+            fill = 1;
+            MOVE PROPERTY (note(n));
+        }
+    }
+}
+
 // для добавления в overReceive(Configuration c) в конце обработки
-onShowTestExpense '' () {
+onShowTestExpense 'Расходы' () {
     SHOW viewExpense DOCKED ;
 //    CANCEL ;
 }
 
 // принятые данные, платежи
-FORM viewPayments 'Принятые платежи'
+FORM viewPayments 'Платежи'
     OBJECTS p = Payment LAST
-    PROPERTIES (p) READONLY uid, number, Payment.date, Payment.nameLegalEntity, Payment.sum, Payment.note
+    PROPERTIES (p) READONLY uid, number, Payment.date, Payment.nameLegalEntity, Payment.sum, numberAccount
+    OBJECTS n = Payment PANEL 
+    PROPERTIES (n) READONLY Payment.note
     OBJECTS c = Customer LAST
     PROPERTIES (c) READONLY Customer.name
     OBJECTS l = LegalEntity
     PROPERTIES (l) READONLY uid, LegalEntity.name,LegalEntity.fullName, LegalEntityFit.INN, LegalEntityFit.KPP
     PROPERTIES () fltPayment TOOLBAR, onShowLegalEntity TOOLBAR 
     FILTERS IF fltPayment() THEN customer(p) = c ELSE TRUE
+    FILTERS n = p
     FILTERS customer(l) = c
     FILTERS uid(p)
     EVENTS ON INIT {fltPayment() <- TRUE;}
     ORDERS date(p)
 ;
 
-onShowTestPayments '' () {
+DESIGN viewPayments {
+    PANEL {
+        NEW cntNote {
+            fill = 1;
+            MOVE PROPERTY (note(n));
+        }
+    }
+}
+
+onShowTestPayments 'Платежи' () {
     SHOW viewPayments DOCKED ;
     CANCEL ;
 }

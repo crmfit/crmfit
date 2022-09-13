@@ -1,0 +1,7 @@
+MODULE ExpenseFit;
+
+REQUIRE Expense;
+
+NAMESPACE Expense;
+
+number 'Номер' = DATA STRING[15] (Expense);

@@ -10,3 +10,7 @@ EXTEND FORM legalEntity
     PROPERTIES(o) INN, KPP  
 ; 
 
+EXTEND FORM legalEntities
+    PROPERTIES (o) READONLY INN, KPP
+;
+
