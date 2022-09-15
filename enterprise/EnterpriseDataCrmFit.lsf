@@ -7,10 +7,6 @@ NAMESPACE EnterpriseData;
 
 EXTEND CLASS LegalEntity : EnterpriseData.Partner;
 
-// проверка на ИНН организации: могут быть ранее введенные организации
-// чтобы исключить повторы в создании организаций проверяем по ИНН
-checkInn (STRING[12] cid) = GROUP LAST LegalEntity o ORDER o BY INN(o);
-
 onClsDataImport 'Очистить ранее принятые данные' (Configuration c) {
     ASK 'Вы действительно хотите удалить\nранее принятые данные\nплатежных поручений?' useOld = YESNO DO {
         IF useOld THEN {
@@ -26,6 +22,10 @@ rewriteUidLegalEntity 'Перезаписывать uid при получени�
 company 'ID Компания' = DATA LegalEntity (Configuration);
 companyName 'Компания' (Configuration c)  = name(company(c)); // надо для платежей
 CONSTRAINT company(Configuration c) AND NOT isCompany(company(c))  MESSAGE 'Организация не является компанией';
+
+checkInn 'Проверка клиента по ИНН' (STRING[12] cid) = GROUP LAST LegalEntity o ORDER o BY INN(o);
+checkCompany 'Проверка на принадлежность компании' (Configuration c,STRING[36] uid) = 
+                    GROUP MAX (tempAccount t) IF uidDocument(t) = uid AND innCompany(t) = INN(company(c));
 
 EXTEND FORM integrationData 
     PROPERTIES rewriteUidLegalEntity(), onClsDataImport(c), onShowTestExpense(), onShowTestPayments(), companyName(c)
@@ -75,13 +75,15 @@ META onImportData(Ind, Table, Partner, Procedure, Detail)
         FOR INTEGER i = [GROUP MAX INTEGER j BY uid##Partner(j)](ISTRING[36] d) AND 
             NOT object(uid##Partner(i)) AND rewriteUidLegalEntity() AND LegalEntity le = checkInn(inn##Partner(i)) DO { uid(le) <- uid##Partner(i); }
         //  платежи
-        FOR uid##Procedure(INTEGER i) AND NOT object(uid##Procedure(i)) DO NEW e = Table.Table { uid(e) <- uid##Procedure(i); }
-        FOR Table.Table o = object(uid##Procedure(INTEGER i)) AS Table  DO {
+        FOR uid##Procedure(INTEGER i) AND NOT object(uid##Procedure(i)) AND checkCompany(c, uid##Procedure(i)) DO NEW e = Table.Table { 
+            uid(e) <- uid##Procedure(i); 
+        }
+        FOR Table.Table o = object(uid##Procedure(INTEGER i)) AS Table DO {
             Table.number(o) <- STRING[15](id##Procedure(i));
             Table.date(o) <- toDateFormat(date##Procedure(i),'YYYY-MM-DD');
             Table.sum(o) <- NUMERIC[16,5](sum##Procedure(i));
             Table.note(o) <- ISTRING[100](purpose##Detail(i));
-            Table.company(o) <- company(c);
+            Table.company(o) <- company(c); 
             Table.legalEntity(o) <- object(uid##Partner(i)) AS LegalEntity;
             Table.account(o) <- account(GROUP MAX tempAccount t IF uidDocument(t) = uid##Procedure(i));
         }
@@ -91,14 +93,16 @@ END
 // Внутренние расчеты
 META onImportDataShort(Ind, Table, Procedure, Detail, innLE, nameLE)
     onImportData##Ind(Configuration c) {
-        FOR uid##Procedure(INTEGER i) AND NOT object(uid##Procedure(i)) DO NEW e = Table.Table { uid(e) <- uid##Procedure(i); }
-        FOR Table.Table o = object(uid##Procedure(INTEGER i)) AS Table  DO {
+        FOR uid##Procedure(INTEGER i) AND NOT object(uid##Procedure(i)) AND checkCompany(c, uid##Procedure(i)) DO NEW e = Table.Table { 
+            uid(e) <- uid##Procedure(i); 
+        }
+        FOR Table.Table o = object(uid##Procedure(INTEGER i)) AS Table DO {
             Table.number(o) <- STRING[15](id##Procedure(i));
             Table.date(o) <- toDateFormat(date##Procedure(i),'YYYY-MM-DD');
             Table.sum(o) <- NUMERIC[16,5](sum##Procedure(i));
             Table.note(o) <- ISTRING[100](purpose##Detail(i));
             Table.legalEntity(o) <- company(c);
-            Table.company(o) <- company(c);
+            Table.company(o) <- company(c); 
             Table.account(o) <- account(GROUP MAX tempAccount t IF uidDocument(t) = uid##Procedure(i));
         }
     }    
