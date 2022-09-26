@@ -3,272 +3,63 @@ MODULE EnterpriseDataOtherProperty;
 REQUIRE EnterpriseData, LegalEntity;
 
 GROUP body EXTID '=http://v8.1c.ru/edi/edi_stnd/EnterpriseData/1.6:Body';
-
-GROUP vdokumient_SBDSRaschietySKontraghientami EXTID '=http://v8.1c.ru/edi/edi_stnd/EnterpriseData/1.6:Документ.СБДСРасчетыСКонтрагентами';
-GROUP vkliuchievyieSvoistva EXTID '=http://v8.1c.ru/edi/edi_stnd/EnterpriseData/1.6:КлючевыеСвойства';
-GROUP vorghanizatsiia EXTID '=http://v8.1c.ru/edi/edi_stnd/EnterpriseData/1.6:Организация' : vkliuchievyieSvoistva;
-GROUP vobshchiieDannyie EXTID '=http://v8.1c.ru/edi/edi_stnd/EnterpriseData/1.6:ОбщиеДанные';
-GROUP vbankovskiiSchietOrghanizatsii EXTID '=http://v8.1c.ru/edi/edi_stnd/EnterpriseData/1.6:БанковскийСчетОрганизации' : vobshchiieDannyie;
-
-GROUP vdokumient_SBDSRaschietySSotrudnikami EXTID '=http://v8.1c.ru/edi/edi_stnd/EnterpriseData/1.6:Документ.СБДСРасчетыССотрудниками';
-GROUP vkliuchievyieSvoistva1 EXTID '=http://v8.1c.ru/edi/edi_stnd/EnterpriseData/1.6:КлючевыеСвойства';
-GROUP vorghanizatsiia1 EXTID '=http://v8.1c.ru/edi/edi_stnd/EnterpriseData/1.6:Организация' : vkliuchievyieSvoistva1;
-GROUP vobshchiieDannyie1 EXTID '=http://v8.1c.ru/edi/edi_stnd/EnterpriseData/1.6:ОбщиеДанные';
-GROUP vbankovskiiSchietOrghanizatsii1 EXTID '=http://v8.1c.ru/edi/edi_stnd/EnterpriseData/1.6:БанковскийСчетОрганизации' : vobshchiieDannyie1;
-
-GROUP vdokumient_SBDSPieriechislieniieZarabotnoiPlaty EXTID '=http://v8.1c.ru/edi/edi_stnd/EnterpriseData/1.6:Документ.СБДСПеречислениеЗаработнойПлаты';
-GROUP vkliuchievyieSvoistva2 EXTID '=http://v8.1c.ru/edi/edi_stnd/EnterpriseData/1.6:КлючевыеСвойства';
-GROUP vorghanizatsiia2 EXTID '=http://v8.1c.ru/edi/edi_stnd/EnterpriseData/1.6:Организация' : vkliuchievyieSvoistva2;
-GROUP vobshchiieDannyie2 EXTID '=http://v8.1c.ru/edi/edi_stnd/EnterpriseData/1.6:ОбщиеДанные';
-GROUP vbankovskiiSchietOrghanizatsii2 EXTID '=http://v8.1c.ru/edi/edi_stnd/EnterpriseData/1.6:БанковскийСчетОрганизации' : vobshchiieDannyie2;
-
-GROUP vdokumient_SBDSPieriechislieniieZarabotnoiPlatyNaLitsievyieSchieta EXTID '=http://v8.1c.ru/edi/edi_stnd/EnterpriseData/1.6:Документ.СБДСПеречислениеЗаработнойПлатыНаЛицевыеСчета';
-GROUP vkliuchievyieSvoistva3 EXTID '=http://v8.1c.ru/edi/edi_stnd/EnterpriseData/1.6:КлючевыеСвойства';
-GROUP vorghanizatsiia3 EXTID '=http://v8.1c.ru/edi/edi_stnd/EnterpriseData/1.6:Организация' : vkliuchievyieSvoistva3;
-GROUP vobshchiieDannyie3 EXTID '=http://v8.1c.ru/edi/edi_stnd/EnterpriseData/1.6:ОбщиеДанные';
-GROUP vbankovskiiSchietOrghanizatsii3 EXTID '=http://v8.1c.ru/edi/edi_stnd/EnterpriseData/1.6:БанковскийСчетОрганизации' : vobshchiieDannyie3;
-
-GROUP vdokumient_SBDSPierievodNaDrughoiSchiet EXTID '=http://v8.1c.ru/edi/edi_stnd/EnterpriseData/1.6:Документ.СБДСПереводНаДругойСчет';
-GROUP vkliuchievyieSvoistva4 EXTID '=http://v8.1c.ru/edi/edi_stnd/EnterpriseData/1.6:КлючевыеСвойства';
-GROUP vorghanizatsiia4 EXTID '=http://v8.1c.ru/edi/edi_stnd/EnterpriseData/1.6:Организация' : vkliuchievyieSvoistva4;
-GROUP vobshchiieDannyie4 EXTID '=http://v8.1c.ru/edi/edi_stnd/EnterpriseData/1.6:ОбщиеДанные';
-GROUP vbankovskiiSchietOrghanizatsii4 EXTID '=http://v8.1c.ru/edi/edi_stnd/EnterpriseData/1.6:БанковскийСчетОрганизации' : vobshchiieDannyie4;
-
-GROUP vdokumient_SBDSProchieieSpisaniie EXTID '=http://v8.1c.ru/edi/edi_stnd/EnterpriseData/1.6:Документ.СБДСПрочееСписание';
-GROUP vkliuchievyieSvoistva5 EXTID '=http://v8.1c.ru/edi/edi_stnd/EnterpriseData/1.6:КлючевыеСвойства';
-GROUP vorghanizatsiia5 EXTID '=http://v8.1c.ru/edi/edi_stnd/EnterpriseData/1.6:Организация' : vkliuchievyieSvoistva5;
-GROUP vobshchiieDannyie5 EXTID '=http://v8.1c.ru/edi/edi_stnd/EnterpriseData/1.6:ОбщиеДанные';
-GROUP vbankovskiiSchietOrghanizatsii5 EXTID '=http://v8.1c.ru/edi/edi_stnd/EnterpriseData/1.6:БанковскийСчетОрганизации' : vobshchiieDannyie5;
-
-GROUP vdokumient_SBDSProchiieRaskhody EXTID '=http://v8.1c.ru/edi/edi_stnd/EnterpriseData/1.6:Документ.СБДСПрочиеРасходы';
-GROUP vkliuchievyieSvoistva6 EXTID '=http://v8.1c.ru/edi/edi_stnd/EnterpriseData/1.6:КлючевыеСвойства';
-GROUP vorghanizatsiia6 EXTID '=http://v8.1c.ru/edi/edi_stnd/EnterpriseData/1.6:Организация' : vkliuchievyieSvoistva6;
-GROUP vobshchiieDannyie6 EXTID '=http://v8.1c.ru/edi/edi_stnd/EnterpriseData/1.6:ОбщиеДанные';
-GROUP vbankovskiiSchietOrghanizatsii6 EXTID '=http://v8.1c.ru/edi/edi_stnd/EnterpriseData/1.6:БанковскийСчетОрганизации' : vobshchiieDannyie6;
-
-GROUP vdokumient_SBDSKonviertatsiiaValiuty EXTID '=http://v8.1c.ru/edi/edi_stnd/EnterpriseData/1.6:Документ.СБДСКонвертацияВалюты';
-GROUP vkliuchievyieSvoistva7 EXTID '=http://v8.1c.ru/edi/edi_stnd/EnterpriseData/1.6:КлючевыеСвойства';
-GROUP vorghanizatsiia7 EXTID '=http://v8.1c.ru/edi/edi_stnd/EnterpriseData/1.6:Организация' : vkliuchievyieSvoistva7;
-GROUP vobshchiieDannyie7 EXTID '=http://v8.1c.ru/edi/edi_stnd/EnterpriseData/1.6:ОбщиеДанные';
-GROUP vbankovskiiSchietOrghanizatsii7 EXTID '=http://v8.1c.ru/edi/edi_stnd/EnterpriseData/1.6:БанковскийСчетОрганизации' : vobshchiieDannyie7;
-
-GROUP vdokumient_SBDSPlatiezhiVBiudzhiet EXTID '=http://v8.1c.ru/edi/edi_stnd/EnterpriseData/1.6:Документ.СБДСПлатежиВБюджет';
-GROUP vkliuchievyieSvoistva8 EXTID '=http://v8.1c.ru/edi/edi_stnd/EnterpriseData/1.6:КлючевыеСвойства';
-GROUP vorghanizatsiia8 EXTID '=http://v8.1c.ru/edi/edi_stnd/EnterpriseData/1.6:Организация' : vkliuchievyieSvoistva8;
-GROUP vobshchiieDannyie8 EXTID '=http://v8.1c.ru/edi/edi_stnd/EnterpriseData/1.6:ОбщиеДанные';
-GROUP vbankovskiiSchietOrghanizatsii8 EXTID '=http://v8.1c.ru/edi/edi_stnd/EnterpriseData/1.6:БанковскийСчетОрганизации' : vobshchiieDannyie8;
-
-GROUP vdokumient_PBDSRaschietySKontraghientami EXTID '=http://v8.1c.ru/edi/edi_stnd/EnterpriseData/1.6:Документ.ПБДСРасчетыСКонтрагентами';
-GROUP vkliuchievyieSvoistva9 EXTID '=http://v8.1c.ru/edi/edi_stnd/EnterpriseData/1.6:КлючевыеСвойства';
-GROUP vorghanizatsiia9 EXTID '=http://v8.1c.ru/edi/edi_stnd/EnterpriseData/1.6:Организация' : vkliuchievyieSvoistva9;
-GROUP vobshchiieDannyie9 EXTID '=http://v8.1c.ru/edi/edi_stnd/EnterpriseData/1.6:ОбщиеДанные';
-GROUP vbankovskiiSchietOrghanizatsii9 EXTID '=http://v8.1c.ru/edi/edi_stnd/EnterpriseData/1.6:БанковскийСчетОрганизации' : vobshchiieDannyie9;
-
-GROUP vdokumient_PBDSProchieiePostuplieniie EXTID '=http://v8.1c.ru/edi/edi_stnd/EnterpriseData/1.6:Документ.ПБДСПрочееПоступление';
-GROUP vkliuchievyieSvoistva10 EXTID '=http://v8.1c.ru/edi/edi_stnd/EnterpriseData/1.6:КлючевыеСвойства';
-GROUP vorghanizatsiia10 EXTID '=http://v8.1c.ru/edi/edi_stnd/EnterpriseData/1.6:Организация' : vkliuchievyieSvoistva10;
-GROUP vobshchiieDannyie10 EXTID '=http://v8.1c.ru/edi/edi_stnd/EnterpriseData/1.6:ОбщиеДанные';
-GROUP vbankovskiiSchietOrghanizatsii10 EXTID '=http://v8.1c.ru/edi/edi_stnd/EnterpriseData/1.6:БанковскийСчетОрганизации' : vobshchiieDannyie10;
-
-GROUP vdokumient_PBDSRaschietySSotrudnikami EXTID '=http://v8.1c.ru/edi/edi_stnd/EnterpriseData/1.6:Документ.ПБДСРасчетыССотрудниками';
-GROUP vkliuchievyieSvoistva11 EXTID '=http://v8.1c.ru/edi/edi_stnd/EnterpriseData/1.6:КлючевыеСвойства';
-GROUP vorghanizatsiia11 EXTID '=http://v8.1c.ru/edi/edi_stnd/EnterpriseData/1.6:Организация' : vkliuchievyieSvoistva11;
-GROUP vobshchiieDannyie11 EXTID '=http://v8.1c.ru/edi/edi_stnd/EnterpriseData/1.6:ОбщиеДанные';
-GROUP vbankovskiiSchietOrghanizatsii11 EXTID '=http://v8.1c.ru/edi/edi_stnd/EnterpriseData/1.6:БанковскийСчетОрганизации' : vobshchiieDannyie11;
-
-GROUP vdokumient_PBDSPoPlatiezhnymKartam EXTID '=http://v8.1c.ru/edi/edi_stnd/EnterpriseData/1.6:Документ.ПБДСПоПлатежнымКартам';
-GROUP vkliuchievyieSvoistva12 EXTID '=http://v8.1c.ru/edi/edi_stnd/EnterpriseData/1.6:КлючевыеСвойства';
-GROUP vorghanizatsiia12 EXTID '=http://v8.1c.ru/edi/edi_stnd/EnterpriseData/1.6:Организация' : vkliuchievyieSvoistva12;
-GROUP vobshchiieDannyie12 EXTID '=http://v8.1c.ru/edi/edi_stnd/EnterpriseData/1.6:ОбщиеДанные';
-GROUP vbankovskiiSchietOrghanizatsii12 EXTID '=http://v8.1c.ru/edi/edi_stnd/EnterpriseData/1.6:БанковскийСчетОрганизации' : vobshchiieDannyie12;
-
-GROUP vdokumient_PBDSKonviertatsiiaValiuty EXTID '=http://v8.1c.ru/edi/edi_stnd/EnterpriseData/1.6:Документ.ПБДСКонвертацияВалюты';
-GROUP vkliuchievyieSvoistva13 EXTID '=http://v8.1c.ru/edi/edi_stnd/EnterpriseData/1.6:КлючевыеСвойства';
-GROUP vorghanizatsiia13 EXTID '=http://v8.1c.ru/edi/edi_stnd/EnterpriseData/1.6:Организация' : vkliuchievyieSvoistva13;
-GROUP vobshchiieDannyie13 EXTID '=http://v8.1c.ru/edi/edi_stnd/EnterpriseData/1.6:ОбщиеДанные';
-GROUP vbankovskiiSchietOrghanizatsii13 EXTID '=http://v8.1c.ru/edi/edi_stnd/EnterpriseData/1.6:БанковскийСчетОрганизации' : vobshchiieDannyie13;
-
-GROUP vdokumient_PBDSProchiieDokhody EXTID '=http://v8.1c.ru/edi/edi_stnd/EnterpriseData/1.6:Документ.ПБДСПрочиеДоходы';
-GROUP vkliuchievyieSvoistva14 EXTID '=http://v8.1c.ru/edi/edi_stnd/EnterpriseData/1.6:КлючевыеСвойства';
-GROUP vorghanizatsiia14 EXTID '=http://v8.1c.ru/edi/edi_stnd/EnterpriseData/1.6:Организация' : vkliuchievyieSvoistva14;
-GROUP vobshchiieDannyie14 EXTID '=http://v8.1c.ru/edi/edi_stnd/EnterpriseData/1.6:ОбщиеДанные';
-GROUP vbankovskiiSchietOrghanizatsii14 EXTID '=http://v8.1c.ru/edi/edi_stnd/EnterpriseData/1.6:БанковскийСчетОрганизации' : vobshchiieDannyie14;
-
 header = DATA LOCAL STRING();
-
-vssylka = DATA LOCAL STRING(INTEGER);
-vINN = DATA LOCAL STRING(INTEGER);
-vnomierSchieta = DATA LOCAL STRING(INTEGER);
-
-vssylka1 = DATA LOCAL STRING(INTEGER);
-vINN1 = DATA LOCAL STRING(INTEGER);
-vnomierSchieta1 = DATA LOCAL STRING(INTEGER);
-
-vssylka2 = DATA LOCAL STRING(INTEGER);
-vINN2 = DATA LOCAL STRING(INTEGER);
-vnomierSchieta2 = DATA LOCAL STRING(INTEGER);
-
-vssylka3 = DATA LOCAL STRING(INTEGER);
-vINN3 = DATA LOCAL STRING(INTEGER);
-vnomierSchieta3 = DATA LOCAL STRING(INTEGER);
-
-vssylka4 = DATA LOCAL STRING(INTEGER);
-vINN4 = DATA LOCAL STRING(INTEGER);
-vnomierSchieta4 = DATA LOCAL STRING(INTEGER);
-
-vssylka5 = DATA LOCAL STRING(INTEGER);
-vINN5 = DATA LOCAL STRING(INTEGER);
-vnomierSchieta5 = DATA LOCAL STRING(INTEGER);
-
-vssylka6 = DATA LOCAL STRING(INTEGER);
-vINN6 = DATA LOCAL STRING(INTEGER);
-vnomierSchieta6 = DATA LOCAL STRING(INTEGER);
-
-vssylka7 = DATA LOCAL STRING(INTEGER);
-vINN7 = DATA LOCAL STRING(INTEGER);
-vnomierSchieta7 = DATA LOCAL STRING(INTEGER);
-
-vssylka8 = DATA LOCAL STRING(INTEGER);
-vINN8 = DATA LOCAL STRING(INTEGER);
-vnomierSchieta8 = DATA LOCAL STRING(INTEGER);
-
-vssylka9 = DATA LOCAL STRING(INTEGER);
-vINN9 = DATA LOCAL STRING(INTEGER);
-vnomierSchieta9 = DATA LOCAL STRING(INTEGER);
-
-vssylka10 = DATA LOCAL STRING(INTEGER);
-vINN10 = DATA LOCAL STRING(INTEGER);
-vnomierSchieta10 = DATA LOCAL STRING(INTEGER);
-
-vssylka11 = DATA LOCAL STRING(INTEGER);
-vINN11 = DATA LOCAL STRING(INTEGER);
-vnomierSchieta11 = DATA LOCAL STRING(INTEGER);
-
-vssylka12 = DATA LOCAL STRING(INTEGER);
-vINN12 = DATA LOCAL STRING(INTEGER);
-vnomierSchieta12 = DATA LOCAL STRING(INTEGER);
-
-vssylka13 = DATA LOCAL STRING(INTEGER);
-vINN13 = DATA LOCAL STRING(INTEGER);
-vnomierSchieta13 = DATA LOCAL STRING(INTEGER);
-
-vssylka14 = DATA LOCAL STRING(INTEGER);
-vINN14 = DATA LOCAL STRING(INTEGER);
-vnomierSchieta14 = DATA LOCAL STRING(INTEGER);
 
 FORM message FORMEXTID 'Message'
 PROPERTIES ATTR ='http://www.1c.ru/SSL/Exchange/Message' EXTID 'xmlns:msg', 
                 ='http://www.w3.org/2001/XMLSchema' EXTID 'xmlns:xs', 
                 ='http://www.w3.org/2001/XMLSchema-instance' EXTID 'xmlns:xsi'
-
 PROPERTIES() header EXTID 'msg:Header'
-PROPERTIES ATTR IN body ='http://v8.1c.ru/edi/edi_stnd/EnterpriseData/1.6' EXTID 'xmlns:'
+PROPERTIES ATTR IN body ='http://v8.1c.ru/edi/edi_stnd/EnterpriseData/1.6' EXTID 'xmlns:';
 
-OBJECTS vdokumient_SBDSRaschietySKontraghientami = INTEGER EXTID 'Документ.СБДСРасчетыСКонтрагентами' IN body
-PROPERTIES(vdokumient_SBDSRaschietySKontraghientami) IN vkliuchievyieSvoistva vssylka EXTID 'Ссылка'
-PROPERTIES(vdokumient_SBDSRaschietySKontraghientami) IN vorghanizatsiia vINN EXTID 'ИНН'
-FILTERS imported(vdokumient_SBDSRaschietySKontraghientami)
-OBJECTS vobshchiieDannyie = INTEGER EXTID 'ОбщиеДанные'
-PROPERTIES(vdokumient_SBDSRaschietySKontraghientami) IN vbankovskiiSchietOrghanizatsii vnomierSchieta EXTID 'НомерСчета'
+META defImportDoc(Ind,DocumentName)
+    GROUP vdokumient##Ind EXTID DocumentName;
+    GROUP vkliuchievyieSvoistva##Ind EXTID 'КлючевыеСвойства';
+    GROUP vorghanizatsiia##Ind EXTID 'Организация' : vkliuchievyieSvoistva##Ind;
+    GROUP vobshchiieDannyie##Ind EXTID 'ОбщиеДанные';
+    GROUP vbankovskiiSchietOrghanizatsii##Ind EXTID 'БанковскийСчетОрганизации' : vobshchiieDannyie##Ind;
+        vssylka##Ind = DATA LOCAL STRING(INTEGER);
+        vINN##Ind = DATA LOCAL STRING(INTEGER);
+        vnomierSchieta##Ind = DATA LOCAL STRING(INTEGER);
+    EXTEND FORM message
+    OBJECTS vdokumient##Ind = INTEGER EXTID DocumentName IN body
+    OBJECTS vkliuchievyieSvoistva##Ind = INTEGER EXTID 'КлючевыеСвойства'
+    PROPERTIES(vdokumient##Ind) IN vkliuchievyieSvoistva##Ind vssylka##Ind EXTID 'Ссылка'
+    PROPERTIES(vdokumient##Ind) IN vorghanizatsiia##Ind vINN##Ind EXTID 'ИНН'
+    OBJECTS vobshchiieDannyie##Ind = INTEGER EXTID 'ОбщиеДанные'
+    PROPERTIES(vdokumient##Ind) IN vbankovskiiSchietOrghanizatsii##Ind vnomierSchieta##Ind EXTID 'НомерСчета'
+    FILTERS imported(vdokumient##Ind);
+END;
 
-OBJECTS vdokumient_SBDSRaschietySSotrudnikami = INTEGER EXTID 'Документ.СБДСРасчетыССотрудниками' IN body
-PROPERTIES(vdokumient_SBDSRaschietySSotrudnikami) IN vkliuchievyieSvoistva1 vssylka1 EXTID 'Ссылка'
-PROPERTIES(vdokumient_SBDSRaschietySSotrudnikami) IN vorghanizatsiia1 vINN1 EXTID 'ИНН'
-FILTERS imported(vdokumient_SBDSRaschietySSotrudnikami)
-OBJECTS vobshchiieDannyie1 = INTEGER EXTID 'ОбщиеДанные'
-PROPERTIES(vdokumient_SBDSRaschietySSotrudnikami) IN vbankovskiiSchietOrghanizatsii1 vnomierSchieta1 EXTID 'НомерСчета'
+@defImportDoc( 1,'Документ.СБДСРасчетыСКонтрагентами');
+@defImportDoc( 2,'Документ.СБДСРасчетыССотрудниками');
+@defImportDoc( 3,'Документ.СБДСПеречислениеЗаработнойПлаты');
+@defImportDoc( 4,'Документ.СБДСПеречислениеЗаработнойПлатыНаЛицевыеСчета');
+@defImportDoc( 5,'Документ.СБДСПереводНаДругойСчет');
+@defImportDoc( 6,'Документ.СБДСПрочееСписание');
+@defImportDoc( 7,'Документ.СБДСПрочиеРасходы');
+@defImportDoc( 8,'Документ.СБДСКонвертацияВалюты');
+@defImportDoc( 9,'Документ.СБДСПлатежиВБюджет');
+@defImportDoc(10,'Документ.ПБДСРасчетыСКонтрагентами');
 
-OBJECTS vdokumient_SBDSPieriechislieniieZarabotnoiPlaty = INTEGER EXTID 'Документ.СБДСПеречислениеЗаработнойПлаты' IN body
-PROPERTIES(vdokumient_SBDSPieriechislieniieZarabotnoiPlaty) IN vkliuchievyieSvoistva2 vssylka2 EXTID 'Ссылка'
-PROPERTIES(vdokumient_SBDSPieriechislieniieZarabotnoiPlaty) IN vorghanizatsiia2 vINN2 EXTID 'ИНН'
-FILTERS imported(vdokumient_SBDSPieriechislieniieZarabotnoiPlaty)
-OBJECTS vobshchiieDannyie2 = INTEGER EXTID 'ОбщиеДанные'
-PROPERTIES(vdokumient_SBDSPieriechislieniieZarabotnoiPlaty) IN vbankovskiiSchietOrghanizatsii2 vnomierSchieta2 EXTID 'НомерСчета'
+// Номер и дата договора при поступлениях от контрагента
+GROUP vrasshifrovkaPlatiezha10 EXTID 'РасшифровкаПлатежа';
+GROUP vstroka10 EXTID 'Строка' : vrasshifrovkaPlatiezha10;
+GROUP vdannyieVzaimoraschietov10 EXTID 'ДанныеВзаиморасчетов' : vstroka10;
+GROUP vdoghovor10 EXTID 'Договор' : vdannyieVzaimoraschietov10;
+    number10 = DATA LOCAL STRING(INTEGER);
+    date10 = DATA LOCAL DATE(INTEGER); 
+EXTEND FORM message
+OBJECTS vrasshifrovkaPlatiezha10 = INTEGER EXTID 'РасшифровкаПлатежа'
+OBJECTS vstroka10 = INTEGER EXTID 'Строка' IN vrasshifrovkaPlatiezha10
+OBJECTS vdannyieVzaimoraschietov10 = INTEGER EXTID 'ДанныеВзаиморасчетов' IN vstroka10
+PROPERTIES(vdokumient10) IN vdoghovor10 number10 EXTID 'Номер', date10 EXTID 'Дата';
 
-OBJECTS vdokumient_SBDSPieriechislieniieZarabotnoiPlatyNaLitsievyieSchieta = INTEGER EXTID 'Документ.СБДСПеречислениеЗаработнойПлатыНаЛицевыеСчета' IN body
-PROPERTIES(vdokumient_SBDSPieriechislieniieZarabotnoiPlatyNaLitsievyieSchieta) IN vkliuchievyieSvoistva3 vssylka3 EXTID 'Ссылка'
-PROPERTIES(vdokumient_SBDSPieriechislieniieZarabotnoiPlatyNaLitsievyieSchieta) IN vorghanizatsiia3 vINN3 EXTID 'ИНН'
-FILTERS imported(vdokumient_SBDSPieriechislieniieZarabotnoiPlatyNaLitsievyieSchieta)
-OBJECTS vobshchiieDannyie3 = INTEGER EXTID 'ОбщиеДанные'
-PROPERTIES(vdokumient_SBDSPieriechislieniieZarabotnoiPlatyNaLitsievyieSchieta) IN vbankovskiiSchietOrghanizatsii3 vnomierSchieta3 EXTID 'НомерСчета'
-
-OBJECTS vdokumient_SBDSPierievodNaDrughoiSchiet = INTEGER EXTID 'Документ.СБДСПереводНаДругойСчет' IN body
-PROPERTIES(vdokumient_SBDSPierievodNaDrughoiSchiet) IN vkliuchievyieSvoistva4 vssylka4 EXTID 'Ссылка'
-PROPERTIES(vdokumient_SBDSPierievodNaDrughoiSchiet) IN vorghanizatsiia4 vINN4 EXTID 'ИНН'
-FILTERS imported(vdokumient_SBDSPierievodNaDrughoiSchiet)
-OBJECTS vobshchiieDannyie4 = INTEGER EXTID 'ОбщиеДанные'
-PROPERTIES(vdokumient_SBDSPierievodNaDrughoiSchiet) IN vbankovskiiSchietOrghanizatsii4 vnomierSchieta4 EXTID 'НомерСчета'
-
-OBJECTS vdokumient_SBDSProchieieSpisaniie = INTEGER EXTID 'Документ.СБДСПрочееСписание' IN body
-PROPERTIES(vdokumient_SBDSProchieieSpisaniie) IN vkliuchievyieSvoistva5 vssylka5 EXTID 'Ссылка'
-PROPERTIES(vdokumient_SBDSProchieieSpisaniie) IN vorghanizatsiia5 vINN5 EXTID 'ИНН'
-FILTERS imported(vdokumient_SBDSProchieieSpisaniie)
-OBJECTS vobshchiieDannyie5 = INTEGER EXTID 'ОбщиеДанные'
-PROPERTIES(vdokumient_SBDSProchieieSpisaniie) IN vbankovskiiSchietOrghanizatsii5 vnomierSchieta5 EXTID 'НомерСчета'
-
-OBJECTS vdokumient_SBDSProchiieRaskhody = INTEGER EXTID 'Документ.СБДСПрочиеРасходы' IN body
-PROPERTIES(vdokumient_SBDSProchiieRaskhody) IN vkliuchievyieSvoistva6 vssylka6 EXTID 'Ссылка'
-PROPERTIES(vdokumient_SBDSProchiieRaskhody) IN vorghanizatsiia6 vINN6 EXTID 'ИНН'
-FILTERS imported(vdokumient_SBDSProchiieRaskhody)
-OBJECTS vobshchiieDannyie6 = INTEGER EXTID 'ОбщиеДанные'
-PROPERTIES(vdokumient_SBDSProchiieRaskhody) IN vbankovskiiSchietOrghanizatsii6 vnomierSchieta6 EXTID 'НомерСчета'
-
-OBJECTS vdokumient_SBDSKonviertatsiiaValiuty = INTEGER EXTID 'Документ.СБДСКонвертацияВалюты' IN body
-PROPERTIES(vdokumient_SBDSKonviertatsiiaValiuty) IN vkliuchievyieSvoistva7 vssylka7 EXTID 'Ссылка'
-PROPERTIES(vdokumient_SBDSKonviertatsiiaValiuty) IN vorghanizatsiia7 vINN7 EXTID ''
-FILTERS imported(vdokumient_SBDSKonviertatsiiaValiuty)
-OBJECTS vobshchiieDannyie7 = INTEGER EXTID 'ОбщиеДанные'
-PROPERTIES(vdokumient_SBDSKonviertatsiiaValiuty) IN vbankovskiiSchietOrghanizatsii7 vnomierSchieta7 EXTID 'НомерСчета'
-
-OBJECTS vdokumient_SBDSPlatiezhiVBiudzhiet = INTEGER EXTID 'Документ.СБДСПлатежиВБюджет' IN body
-PROPERTIES(vdokumient_SBDSPlatiezhiVBiudzhiet) IN vkliuchievyieSvoistva8 vssylka8 EXTID 'Ссылка'
-PROPERTIES(vdokumient_SBDSPlatiezhiVBiudzhiet) IN vorghanizatsiia8 vINN8 EXTID 'ИНН'
-FILTERS imported(vdokumient_SBDSPlatiezhiVBiudzhiet)
-OBJECTS vobshchiieDannyie8 = INTEGER EXTID 'ОбщиеДанные'
-PROPERTIES(vdokumient_SBDSPlatiezhiVBiudzhiet) IN vbankovskiiSchietOrghanizatsii8 vnomierSchieta8 EXTID 'НомерСчета'
-
-OBJECTS vdokumient_PBDSRaschietySKontraghientami = INTEGER EXTID 'Документ.ПБДСРасчетыСКонтрагентами' IN body
-PROPERTIES(vdokumient_PBDSRaschietySKontraghientami) IN vkliuchievyieSvoistva9 vssylka9 EXTID 'Ссылка'
-PROPERTIES(vdokumient_PBDSRaschietySKontraghientami) IN vorghanizatsiia9 vINN9 EXTID 'ИНН'
-FILTERS imported(vdokumient_PBDSRaschietySKontraghientami)
-OBJECTS vobshchiieDannyie9 = INTEGER EXTID 'ОбщиеДанные'
-PROPERTIES(vdokumient_PBDSRaschietySKontraghientami) IN vbankovskiiSchietOrghanizatsii9 vnomierSchieta9 EXTID 'НомерСчета'
-
-OBJECTS vdokumient_PBDSProchieiePostuplieniie = INTEGER EXTID 'Документ.ПБДСПрочееПоступление' IN body
-PROPERTIES(vdokumient_PBDSProchieiePostuplieniie) IN vkliuchievyieSvoistva10 vssylka10 EXTID 'Ссылка'
-PROPERTIES(vdokumient_PBDSProchieiePostuplieniie) IN vorghanizatsiia10 vINN10 EXTID 'ИНН'
-FILTERS imported(vdokumient_PBDSProchieiePostuplieniie)
-OBJECTS vobshchiieDannyie10 = INTEGER EXTID 'ОбщиеДанные'
-PROPERTIES(vdokumient_PBDSProchieiePostuplieniie) IN vbankovskiiSchietOrghanizatsii10 vnomierSchieta10 EXTID 'НомерСчета'
-
-OBJECTS vdokumient_PBDSRaschietySSotrudnikami = INTEGER EXTID 'Документ.ПБДСРасчетыССотрудниками' IN body
-PROPERTIES(vdokumient_PBDSRaschietySSotrudnikami) IN vkliuchievyieSvoistva11 vssylka11 EXTID 'Ссылка'
-PROPERTIES(vdokumient_PBDSRaschietySSotrudnikami) IN vorghanizatsiia11 vINN11 EXTID 'ИНН'
-FILTERS imported(vdokumient_PBDSRaschietySSotrudnikami)
-OBJECTS vobshchiieDannyie11 = INTEGER EXTID 'ОбщиеДанные'
-PROPERTIES(vdokumient_PBDSRaschietySSotrudnikami) IN vbankovskiiSchietOrghanizatsii11 vnomierSchieta11 EXTID 'НомерСчета'
-
-OBJECTS vdokumient_PBDSPoPlatiezhnymKartam = INTEGER EXTID 'Документ.ПБДСПоПлатежнымКартам' IN body
-PROPERTIES(vdokumient_PBDSPoPlatiezhnymKartam) IN vkliuchievyieSvoistva12 vssylka12 EXTID 'Ссылка'
-PROPERTIES(vdokumient_PBDSPoPlatiezhnymKartam) IN vorghanizatsiia12 vINN12 EXTID 'ИНН'
-FILTERS imported(vdokumient_PBDSPoPlatiezhnymKartam)
-OBJECTS vobshchiieDannyie12 = INTEGER EXTID 'ОбщиеДанные'
-PROPERTIES(vdokumient_PBDSPoPlatiezhnymKartam) IN vbankovskiiSchietOrghanizatsii12 vnomierSchieta12 EXTID 'НомерСчета'
-
-OBJECTS vdokumient_PBDSKonviertatsiiaValiuty = INTEGER EXTID 'Документ.ПБДСКонвертацияВалюты' IN body
-PROPERTIES(vdokumient_PBDSKonviertatsiiaValiuty) IN vkliuchievyieSvoistva13 vssylka13 EXTID 'Ссылка'
-PROPERTIES(vdokumient_PBDSKonviertatsiiaValiuty) IN vorghanizatsiia13 vINN13 EXTID 'ИНН'
-FILTERS imported(vdokumient_PBDSKonviertatsiiaValiuty)
-OBJECTS vobshchiieDannyie13 = INTEGER EXTID 'ОбщиеДанные'
-PROPERTIES(vdokumient_PBDSKonviertatsiiaValiuty) IN vbankovskiiSchietOrghanizatsii13 vnomierSchieta13 EXTID 'НомерСчета'
-
-OBJECTS vdokumient_PBDSProchiieDokhody = INTEGER EXTID 'Документ.ПБДСПрочиеДоходы' IN body
-PROPERTIES(vdokumient_PBDSProchiieDokhody) IN vkliuchievyieSvoistva14 vssylka14 EXTID 'Ссылка'
-PROPERTIES(vdokumient_PBDSProchiieDokhody) IN vorghanizatsiia14 vINN14 EXTID 'ИНН'
-FILTERS imported(vdokumient_PBDSProchiieDokhody)
-OBJECTS vobshchiieDannyie14 = INTEGER EXTID 'ОбщиеДанные'
-PROPERTIES(vdokumient_PBDSProchiieDokhody) IN vbankovskiiSchietOrghanizatsii14 vnomierSchieta14 EXTID 'НомерСчета';
-
+@defImportDoc(11,'Документ.ПБДСПрочееПоступление');
+@defImportDoc(12,'Документ.ПБДСРасчетыССотрудниками');
+@defImportDoc(13,'Документ.ПБДСПоПлатежнымКартам');
+@defImportDoc(14,'Документ.ПБДСКонвертацияВалюты');
+@defImportDoc(15,'Документ.ПБДСПрочиеДоходы');
 
 
 CLASS tempAccount;
@@ -276,6 +67,15 @@ uidDocument 'UID документа' = DATA ISTRING[36] (tempAccount);
 innCompany 'ИНН компании' = DATA STRING[12]  (tempAccount);
 accountNumber 'Номер расчетного счета' = DATA STRING[50] (tempAccount);
 account 'ID счета' = DATA Account (tempAccount);
+contractNumber = DATA STRING[15] (tempAccount);
+contractDate = DATA DATE  (tempAccount);
+
+
+onAddImportAccount (tempAccount o, INTEGER ind,i) {
+    IF NOT ind = 10 THEN RETURN ;
+    contractNumber(o) <- STRING[15](number10(i));
+    contractDate(o) <- date10(i);
+}
 
 META onImportAccount(ind)
     onImportAccount##ind(Configuration c,LegalEntity e) {
@@ -285,28 +85,38 @@ META onImportAccount(ind)
             innCompany(o) <- STRING[12](vINN##ind(i));
             accountNumber(o) <- STRING[50](vnomierSchieta##ind(i));
             account(o) <- GROUP MAX (Account ac) IF legalEntity(ac) = e AND number(ac) = accountNumber(o); 
+            onAddImportAccount(o,ind,i);
         }
     } 
 END
 
-@onImportAccount(); @onImportAccount(1); @onImportAccount(2); @onImportAccount(3); @onImportAccount(4); 
-@onImportAccount(5); @onImportAccount(6); @onImportAccount(7); @onImportAccount(8); @onImportAccount(9); 
-@onImportAccount(10); @onImportAccount(11); @onImportAccount(12); @onImportAccount(13); @onImportAccount(14); 
+@onImportAccount(1); 
+@onImportAccount(2); 
+@onImportAccount(3); 
+@onImportAccount(4); 
+@onImportAccount(5); 
+@onImportAccount(6); 
+@onImportAccount(7); 
+@onImportAccount(8); 
+@onImportAccount(9); 
+@onImportAccount(10); 
+@onImportAccount(11); 
+@onImportAccount(12); 
+@onImportAccount(13); 
+@onImportAccount(14); 
+@onImportAccount(15); 
 
-FORM showTempAccount 'Расчетные счета'
-    OBJECTS o = tempAccount
-    PROPERTIES (o) READONLY uidDocument, accountNumber, account
-;
-
-onClearTempAccount () {
-    DELETE tempAccount t WHERE t IS tempAccount; 
+onClearTempTable () {
+    DELETE tempAccount a WHERE a IS tempAccount;
 }
-    
+
 onFillTempAccount '' (Configuration c, LegalEntity e) {
     LOCAL f = XMLFILE ();
     READ receivePath(c) + '.xml' TO f;
     IMPORT message XML FROM f();
-    onImportAccount(c,e) ; onImportAccount1(c,e); onImportAccount2(c,e); onImportAccount3(c,e); onImportAccount4(c,e); 
-    onImportAccount5(c,e) ; onImportAccount6(c,e); onImportAccount7(c,e); onImportAccount8(c,e); onImportAccount9(c,e); 
-    onImportAccount10(c,e) ; onImportAccount11(c,e); onImportAccount12(c,e); onImportAccount13(c,e); onImportAccount14(c,e);
+    onImportAccount1(c,e);  onImportAccount2(c,e);  onImportAccount3(c,e);  // Расходы
+    onImportAccount4(c,e);  onImportAccount5(c,e);  onImportAccount6(c,e);  // Расходы
+    onImportAccount7(c,e);  onImportAccount8(c,e);  onImportAccount9(c,e);  // Расходы
+    onImportAccount10(c,e); onImportAccount11(c,e); onImportAccount12(c,e); // Приходы
+    onImportAccount13(c,e); onImportAccount14(c,e); onImportAccount15(c,e); // Приходы
 }   

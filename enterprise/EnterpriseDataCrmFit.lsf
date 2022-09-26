@@ -1,21 +1,44 @@
 MODULE EnterpriseDataCrmFit;
 
 REQUIRE EnterpriseData, EnterpriseDataExchange, EnterpriseTest, EnterpriseDataOtherProperty,
-        LegalEntityFit, Customer, Payment, Expense, ExpenseFit, Utils, Time;
+        LegalEntityFit, Customer, PaymentContract, Payment, Expense, ExpenseFit, Utils, Time;
 
 NAMESPACE EnterpriseData;
 
 EXTEND CLASS LegalEntity : EnterpriseData.Partner;
 
-onClsDataImport 'Очистить ранее принятые данные' (Configuration c) {
-    ASK 'Вы действительно хотите удалить\nранее принятые данные\nплатежных поручений?' useOld = YESNO DO {
-        IF useOld THEN {
-            DELETE Payment p WHERE p IS Payment AND uid(p);
-            DELETE Expense e WHERE e IS Expense AND uid(e);
-            idReceived(c) <- 0;
-            APPLY;
-        } ELSE MESSAGE 'Операция отменена';
-    } 
+FORM inputBalance 'Ввод нач. остатка'
+    OBJECTS le = LegalEntity PANEL NULL 
+    PROPERTIES name(le) SELECTOR 
+    OBJECTS balanceDate = DATE PANEL 
+    PROPERTIES balanceDate 'Остаток на дату' = VALUE (balanceDate)
+    OBJECTS balance = NUMERIC[10,2] PANEL NULL 
+    PROPERTIES balance 'Начальный остаток' = VALUE (balance)
+        EVENTS ON INIT {
+            SEEK inputBalance.balanceDate = 2010_12_31;
+        }
+        EVENTS ON OK {
+            IF balance AND isCompany(le) THEN {
+                NEW o = Payment {
+                    date(o) <- balanceDate;
+                    sum(o) <- balance;
+                    note(o) <- 'ОСТАТОК на НАЧАЛО';
+                    company(o) <- le;
+                    legalEntity(o) <-le;
+                }
+            } ELSE MESSAGE 'Остаток или компания определены неверно';
+        }
+; 
+
+onClsDataImport 'Очистить ранее принятые платежи' (Configuration c) {
+    ASK 'Вы действительно хотите удалить\nранее принятые данные\nплатежных поручений?' DO {
+        DELETE Payment p WHERE p IS Payment AND uid(p);
+        DELETE Expense e WHERE e IS Expense AND uid(e);
+        idReceived(c) <- NULL;
+        idSended(c) <- NULL;
+        SHOW inputBalance;
+        APPLY;
+    } ELSE MESSAGE 'Операция отменена';
 }
 
 rewriteUidLegalEntity 'Перезаписывать uid при получении' = DATA BOOLEAN ();
@@ -27,14 +50,26 @@ checkInn 'Проверка клиента по ИНН' (STRING[12] cid) = GROUP 
 checkCompany 'Проверка на принадлежность компании' (Configuration c,STRING[36] uid) = 
                     GROUP MAX (tempAccount t) IF uidDocument(t) = uid AND innCompany(t) = INN(company(c));
 
+accountCompany 'Импортировать данные,\nсвязанные только с\nэтим р/счетом' = DATA STRING[50] (Configuration); 
+checkAccount 'Проверка по выбранному счету' (Configuration c,STRING[36] uid) =
+    IF NOT accountCompany(c) THEN TRUE ELSE
+       (IF GROUP MAX (tempAccount t) IF uidDocument(t) = uid AND accountNumber(t) = accountCompany(c) THEN TRUE ELSE NULL);
+       
+
+// grid
 EXTEND FORM integrationData 
-    PROPERTIES rewriteUidLegalEntity(), onClsDataImport(c), onShowTestExpense(), onShowTestPayments(), companyName(c)
+    PROPERTIES rewriteUidLegalEntity(), onClsDataImport(c), onShowTestExpense(), onShowTestPayments() 
+    PROPERTIES(c) READONLY companyName, accountCompany
 ;    
 
-EXTEND FORM configuration PROPERTIES (c) companyName;
+// редактирование
+EXTEND FORM configuration 
+    PROPERTIES (c) companyName, accountCompany;
+
 DESIGN configuration {
     BOX (c) {
         MOVE PROPERTY (companyName(c));
+        MOVE PROPERTY (accountCompany(c));
     }    
 }
    
@@ -45,8 +80,8 @@ DESIGN integrationData {
             caption = 'Дополнительно';
             MOVE PROPERTY (rewriteUidLegalEntity());
             MOVE PROPERTY (onClsDataImport(c));
-            MOVE PROPERTY (onShowTestExpense()); 
             MOVE PROPERTY (onShowTestPayments());
+            MOVE PROPERTY (onShowTestExpense()); 
         }
     }
 }
@@ -71,14 +106,14 @@ META onImportData(Ind, Table, Partner, Procedure, Detail)
                     LegalEntityFit.KPP(le) <- STRING[9](kpp##Partner(i));
         } 
         // обратная синронизация по ИНН: Если организация существует по ИНН, то переписываем для нее UID
-        // тогда для платежек всяегда будут свои организации
+        // тогда для платежек всегда будут свои организации
         FOR INTEGER i = [GROUP MAX INTEGER j BY uid##Partner(j)](ISTRING[36] d) AND 
             NOT object(uid##Partner(i)) AND rewriteUidLegalEntity() AND LegalEntity le = checkInn(inn##Partner(i)) DO { uid(le) <- uid##Partner(i); }
         //  платежи
         FOR uid##Procedure(INTEGER i) AND NOT object(uid##Procedure(i)) AND checkCompany(c, uid##Procedure(i)) DO NEW e = Table.Table { 
             uid(e) <- uid##Procedure(i); 
         }
-        FOR Table.Table o = object(uid##Procedure(INTEGER i)) AS Table DO {
+        FOR Table.Table o = object(uid##Procedure(INTEGER i)) AS Table AND checkAccount(c,uid##Procedure(i)) DO {
             Table.number(o) <- STRING[15](id##Procedure(i));
             Table.date(o) <- toDateFormat(date##Procedure(i),'YYYY-MM-DD');
             Table.sum(o) <- NUMERIC[16,5](sum##Procedure(i));
@@ -90,13 +125,53 @@ META onImportData(Ind, Table, Partner, Procedure, Detail)
    } 
 END
 
+META onImportDataP(Ind, Table, Partner, Procedure, Detail)
+    onImportDataP##Ind(Configuration c) {
+    // организации
+    // -----------------------------------------------------------------------------------------------------------------------------
+    // для каждого объекта (отдельного клиента, отдельного документа) существует свой уникальный UID
+    // группируем по UID (GROUP MAX) и таблицу для FOR попадут только уникальные уникальные элементы массива с индексом i
+    // по условию, что такой ИНН не существует (checkInn)
+        FOR INTEGER i = [GROUP MAX INTEGER j BY uid##Partner(j)](ISTRING[36] d) AND  
+            NOT object(uid##Partner(i)) AND NOT checkInn(inn##Partner(i)) DO NEW le = LegalEntity.LegalEntity {
+                    uid(le) <- uid##Partner(i);
+                    LegalEntity.name(le) <- ISTRING[250](name##Partner(i));
+                    LegalEntity.fullName(le) <- ISTRING[250](fullName##Partner(i));
+                    LegalEntityFit.INN(le) <- STRING[12](inn##Partner(i));
+                    LegalEntityFit.KPP(le) <- STRING[9](kpp##Partner(i));
+        } 
+        // обратная синронизация по ИНН: Если организация существует по ИНН, то переписываем для нее UID
+        // тогда для платежек всегда будут свои организации
+        FOR INTEGER i = [GROUP MAX INTEGER j BY uid##Partner(j)](ISTRING[36] d) AND 
+            NOT object(uid##Partner(i)) AND rewriteUidLegalEntity() AND LegalEntity le = checkInn(inn##Partner(i)) DO { uid(le) <- uid##Partner(i); }
+        //  платежи
+        FOR uid##Procedure(INTEGER i) AND NOT object(uid##Procedure(i)) AND checkCompany(c, uid##Procedure(i)) DO NEW e = Table.Table { 
+            uid(e) <- uid##Procedure(i); 
+        }
+        LOCAL ot = tempAccount ();
+        FOR Table.Table o = object(uid##Procedure(INTEGER i)) AS Table AND checkAccount(c,uid##Procedure(i)) DO {
+            Table.number(o) <- STRING[15](id##Procedure(i));
+            Table.date(o) <- toDateFormat(date##Procedure(i),'YYYY-MM-DD');
+            Table.sum(o) <- NUMERIC[16,5](sum##Procedure(i));
+            Table.note(o) <- ISTRING[100](purpose##Detail(i));
+            Table.company(o) <- company(c); 
+            Table.legalEntity(o) <- object(uid##Partner(i)) AS LegalEntity;
+            ot() <- GROUP MAX tempAccount t IF uidDocument(t) = uid##Procedure(i);
+            Table.account(o) <- account(ot());
+            Table.contract(o) <- GROUP MAX (Contract.Contract oc) 
+                IF legalEntity(oc) = Table.legalEntity(o) AND number(oc) = contractNumber(ot());
+        }
+   } 
+END
+
+
 // Внутренние расчеты
 META onImportDataShort(Ind, Table, Procedure, Detail, innLE, nameLE)
     onImportData##Ind(Configuration c) {
         FOR uid##Procedure(INTEGER i) AND NOT object(uid##Procedure(i)) AND checkCompany(c, uid##Procedure(i)) DO NEW e = Table.Table { 
             uid(e) <- uid##Procedure(i); 
         }
-        FOR Table.Table o = object(uid##Procedure(INTEGER i)) AS Table DO {
+        FOR Table.Table o = object(uid##Procedure(INTEGER i)) AS Table AND checkAccount(c,uid##Procedure(i)) DO {
             Table.number(o) <- STRING[15](id##Procedure(i));
             Table.date(o) <- toDateFormat(date##Procedure(i),'YYYY-MM-DD');
             Table.sum(o) <- NUMERIC[16,5](sum##Procedure(i));
@@ -169,7 +244,7 @@ EXTEND CLASS Expense : EnterpriseData.OutcomePaymentBudgetDetail;
 // ПБДСРасчетыСКонтрагентами
 EXTEND CLASS Payment : EnterpriseData.IncomePaymentPartner;
 EXTEND CLASS Payment : EnterpriseData.IncomePaymentPartnerDetail;
-@onImportData(201, Payment, PartnerIncomePaymentPartner, IncomePaymentPartner, IncomePaymentPartner);
+@onImportDataP(201, Payment, PartnerIncomePaymentPartner, IncomePaymentPartner, IncomePaymentPartner);
 
 // ПБДСПрочееПоступление
 EXTEND CLASS Payment : EnterpriseData.IncomePaymentOther;
@@ -196,17 +271,15 @@ EXTEND CLASS Payment : EnterpriseData.IncomePaymentProfit;
 EXTEND CLASS Payment : EnterpriseData.IncomePaymentProfitDetail;
 @onImportDataShort(206, Payment, IncomePaymentProfit, IncomePaymentProfit, 'x206', '1С ПБДС ПрочиеДоходы');
 
-
-
 overReceive(Configuration c) + {
-    onClearTempAccount();
+    onClearTempTable();
     onFillTempAccount(c,company(c)); 
-    onImportData101(c); onImportData102(c); onImportData103(c); // Расходы
-    onImportData104(c); onImportData105(c); onImportData106(c); // Расходы
-    onImportData107(c); onImportData108(c); onImportData109(c); // Расходы
-    onImportData201(c); onImportData202(c); onImportData203(c); // Приходы
-    onImportData204(c); onImportData205(c); onImportData206(c); // Приходы
-    onClearTempAccount();
+    onImportData101(c); onImportData102(c); onImportData103(c);  // Расходы
+    onImportData104(c); onImportData105(c); onImportData106(c);  // Расходы
+    onImportData107(c); onImportData108(c); onImportData109(c);  // Расходы
+    onImportDataP201(c); onImportData202(c); onImportData203(c); // Приходы
+    onImportData204(c); onImportData205(c); onImportData206(c);  // Приходы
+    onClearTempTable();
 }
 
 

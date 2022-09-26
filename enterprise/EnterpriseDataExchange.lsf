@@ -1276,3 +1276,4 @@ EXTEND FORM receiveMessage
 @defPropSimple(kppPayer, 'КПППлательщика', STRING[12], paymentOrder);
 @defPropSimple(innBeneficiary, 'ИННПолучателя', STRING[12], paymentOrder);
 @defPropSimple(kppBeneficiary, 'КПППолучателя', STRING[12], paymentOrder);
+
