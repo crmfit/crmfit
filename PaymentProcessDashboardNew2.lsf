@@ -5,19 +5,27 @@ REQUIRE PaymentProcessDashboardNew, EnterpriseDataProperty;
 mainLegalEntity 'Фильтр по основной компании' = 
     legalEntity(GROUP MAX (ConfigurationLegalEntity e) IF signMain(e) AND signPayment(configuration(e)));
 
-fltMain 'Основная компания (фильтр)' = DATA LOCAL BOOLEAN ();  
+idFltCurrentCompany 'ID текущей компании' = DATA LOCAL ConfigurationLegalEntity ();
+fltCurrentCompany  'Текущая компания' = name(legalEntity(idFltCurrentCompany()));
+fltCompany 'фильтр по компании' = DATA LOCAL BOOLEAN ();
+
 
 EXTEND FORM paymentProcessDasboard 
-    PROPERTIES fltMain()
-    FILTERS IF fltMain() THEN company(p) = mainLegalEntity() ELSE TRUE 
-    FILTERS IF fltMain() THEN company(e) = mainLegalEntity() ELSE TRUE
+    PROPERTIES fltCompany()
+    PROPERTIES fltCurrentCompany() ON CHANGE {
+        DIALOG dialogConfigurationLegalEntity OBJECTS d INPUT DO idFltCurrentCompany() <- d ;
+    }
+    FILTERS IF fltCompany() THEN company(p) = legalEntity(idFltCurrentCompany()) AND account(p) = account(idFltCurrentCompany()) ELSE TRUE 
+    FILTERS IF fltCompany() THEN company(e) = legalEntity(idFltCurrentCompany()) AND account(e) = account(idFltCurrentCompany()) ELSE TRUE
     EVENTS ON INIT {
-        fltMain() <- TRUE ;
+        fltCompany() <- TRUE ;
+        idFltCurrentCompany() <- GROUP MAX (ConfigurationLegalEntity o) IF signMain(o) AND signPayment(configuration(o)); 
     }   
 ;   
 
 DESIGN paymentProcessDasboard {
     top {
-        MOVE PROPERTY (fltMain()); 
+        MOVE PROPERTY (fltCurrentCompany());
+        MOVE PROPERTY (fltCompany());
     }
 }

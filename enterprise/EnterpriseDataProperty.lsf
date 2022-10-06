@@ -42,6 +42,7 @@ onClsDataImport 'Очистить ранее принятые платежи' ()
     } ELSE MESSAGE 'Операция отменена';
 }
 
+
 FORM editConfigurationLegalEntity 'Связанные организации'
     OBJECTS d = ConfigurationLegalEntity PANEL
     PROPERTIES (d) legalEntityName ON CHANGE {
@@ -55,6 +56,12 @@ FORM editConfigurationLegalEntity 'Связанные организации'
     EVENTS ON INIT {
         IF NOT dateBalance(d) THEN dateBalance(d) <- 2010_01_01;
     }
+;
+
+FORM dialogConfigurationLegalEntity 'Выбор организации'
+    OBJECTS d = ConfigurationLegalEntity
+    PROPERTIES (d) READONLY legalEntityName, accountNumber
+    LIST ConfigurationLegalEntity OBJECT d
 ;
 
 DESIGN editConfigurationLegalEntity {
