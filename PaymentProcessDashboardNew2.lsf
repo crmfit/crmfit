@@ -1,0 +1,23 @@
+MODULE PaymentProcessDashboardNew2;
+
+REQUIRE PaymentProcessDashboardNew, EnterpriseDataProperty;
+
+mainLegalEntity 'Фильтр по основной компании' = 
+    legalEntity(GROUP MAX (ConfigurationLegalEntity e) IF signMain(e) AND signPayment(configuration(e)));
+
+fltMain 'Основная компания (фильтр)' = DATA LOCAL BOOLEAN ();  
+
+EXTEND FORM paymentProcessDasboard 
+    PROPERTIES fltMain()
+    FILTERS IF fltMain() THEN company(p) = mainLegalEntity() ELSE TRUE 
+    FILTERS IF fltMain() THEN company(e) = mainLegalEntity() ELSE TRUE
+    EVENTS ON INIT {
+        fltMain() <- TRUE ;
+    }   
+;   
+
+DESIGN paymentProcessDasboard {
+    top {
+        MOVE PROPERTY (fltMain()); 
+    }
+}

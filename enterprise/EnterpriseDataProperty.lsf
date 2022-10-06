@@ -1,0 +1,102 @@
+MODULE EnterpriseDataProperty;
+
+REQUIRE EnterpriseData, LegalEntityFit, EnterpriseTest;
+
+NAMESPACE EnterpriseData;
+
+rewriteUidLegalEntity 'Перезаписывать uid при получении' = DATA BOOLEAN ();
+signPayment 'Признак платежей' = DATA BOOLEAN (Configuration);
+ 
+CLASS ConfigurationLegalEntity 'Связанные организации';
+configuration 'ID конфигурации' = DATA Configuration (ConfigurationLegalEntity) AUTOSET ;
+signMain 'Основная организация' = DATA BOOLEAN (ConfigurationLegalEntity);
+legalEntity 'ID организации' = DATA LegalEntity (ConfigurationLegalEntity) NONULL;
+account 'ID р/счета' = DATA Account (ConfigurationLegalEntity) NONULL;
+dateBalance 'Дата остатка' = DATA DATE (ConfigurationLegalEntity);
+balance 'Остаток' = DATA NUMERIC[12,2] (ConfigurationLegalEntity);
+
+
+legalEntityName 'Организация' (ConfigurationLegalEntity o) = name(legalEntity(o)); 
+accountNumber 'Расчетный счет' (ConfigurationLegalEntity o) = number(account(o));
+legalEntityINN 'ИНН' (ConfigurationLegalEntity o) = INN(legalEntity(o));
+
+CONSTRAINT legalEntity(ConfigurationLegalEntity e) AND 
+    NOT isCompany(legalEntity(e)) MESSAGE 'Организация не является компанией';
+
+onClsDataImport 'Очистить ранее принятые платежи' () {
+    ASK 'Вы действительно хотите удалить\nранее принятые данные\nплатежных поручений?' DO {
+        DELETE Payment p WHERE p IS Payment AND uid(p);
+        DELETE Expense e WHERE e IS Expense AND uid(e);
+        idReceived(c) <- NULL;
+        idSended(c) <- NULL;
+        FOR (ConfigurationLegalEntity e IS ConfigurationLegalEntity) AND 
+            signPayment(configuration(e)) AND balance(e) NEW o = Payment DO {
+            date(o) <- dateBalance(e);
+            sum(o) <- balance(e);
+            note(o) <- 'ОСТАТОК на НАЧАЛО';
+            company(o) <- legalEntity(e);
+            legalEntity(o) <- legalEntity(e);
+            account(o) <- account(e);
+        } 
+        APPLY;
+    } ELSE MESSAGE 'Операция отменена';
+}
+
+FORM editConfigurationLegalEntity 'Связанные организации'
+    OBJECTS d = ConfigurationLegalEntity PANEL
+    PROPERTIES (d) legalEntityName ON CHANGE {
+        DIALOG dialogLegalEntities OBJECTS o INPUT DO legalEntity(d) <- o; account(d) <- NULL ;
+    }
+    PROPERTIES (d) accountNumber ON CHANGE {
+        DIALOG dialogAccounts OBJECTS a INPUT FILTERS legalEntity(a) = legalEntity(d) DO account(d) <- a;
+    }
+    PROPERTIES (d) dateBalance, balance, signMain 
+    EDIT ConfigurationLegalEntity OBJECT d
+    EVENTS ON INIT {
+        IF NOT dateBalance(d) THEN dateBalance(d) <- 2010_01_01;
+    }
+;
+
+DESIGN editConfigurationLegalEntity {
+    OBJECTS {
+        NEW cnt {
+            horizontal = FALSE ;
+            MOVE PROPERTY (legalEntityName(d));
+            MOVE PROPERTY (accountNumber(d));
+            MOVE PROPERTY (dateBalance(d));
+            MOVE PROPERTY (balance(d));
+            MOVE PROPERTY (signMain(d));
+        }
+    }
+}
+
+// grid
+EXTEND FORM integrationData
+    PROPERTIES (c) signPayment
+    PROPERTIES () rewriteUidLegalEntity, onClsDataImport,  onShowTestExpense, onShowTestPayments 
+    OBJECTS d = ConfigurationLegalEntity
+    PROPERTIES (d) READONLY signMain, legalEntityName, accountNumber, dateBalance, balance
+    PROPERTIES (d) NEWSESSION NEW, EDIT, DELETE 
+    FILTERS configuration(d)=c
+;
+
+// редактирование
+EXTEND FORM configuration 
+    PROPERTIES (c) signPayment;
+
+    
+DESIGN integrationData {
+    enterpriseData {
+        NEW cntOther BEFORE cGrid {
+            horizontal = TRUE; 
+            caption = 'Дополнительно';
+            MOVE PROPERTY (rewriteUidLegalEntity());
+            MOVE PROPERTY (onClsDataImport());
+            MOVE PROPERTY (onShowTestPayments());
+            MOVE PROPERTY (onShowTestExpense()); 
+        }
+        BOX(d) {
+            fill = 0.1;
+        }
+    }
+}

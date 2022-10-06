@@ -29,5 +29,5 @@ REQUIRE Scheduler, Service, SystemEvents, Backup, Eval, SQLUtils, ProcessUtils, 
         LegalEntityFit, 
         // TestDataShow,
         // EnterpriseData, стыковкка с 1C
-       EnterpriseDataCrmFit 
+       EnterpriseDataCrmFit, PaymentProcessDashboardNew2 
 ;

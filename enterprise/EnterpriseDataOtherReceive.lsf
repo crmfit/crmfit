@@ -1,4 +1,4 @@
-MODULE EnterpriseDataOtherProperty;
+MODULE EnterpriseDataOtherReceive;
 
 REQUIRE EnterpriseData, LegalEntity;
 
@@ -66,7 +66,6 @@ CLASS tempAccount;
 uidDocument 'UID документа' = DATA ISTRING[36] (tempAccount);
 innCompany 'ИНН компании' = DATA STRING[12]  (tempAccount);
 accountNumber 'Номер расчетного счета' = DATA STRING[50] (tempAccount);
-account 'ID счета' = DATA Account (tempAccount);
 contractNumber = DATA STRING[15] (tempAccount);
 contractDate = DATA DATE  (tempAccount);
 
@@ -78,13 +77,12 @@ onAddImportAccount (tempAccount o, INTEGER ind,i) {
 }
 
 META onImportAccount(ind)
-    onImportAccount##ind(Configuration c,LegalEntity e) {
+    onImportAccount##ind(Configuration c) {
         LOCAL a = Account ();
         FOR vssylka##ind(INTEGER i) DO NEW o = tempAccount {
             uidDocument(o) <- ISTRING[36](vssylka##ind(i));
             innCompany(o) <- STRING[12](vINN##ind(i));
             accountNumber(o) <- STRING[50](vnomierSchieta##ind(i));
-            account(o) <- GROUP MAX (Account ac) IF legalEntity(ac) = e AND number(ac) = accountNumber(o); 
             onAddImportAccount(o,ind,i);
         }
     } 
@@ -110,13 +108,13 @@ onClearTempTable () {
     DELETE tempAccount a WHERE a IS tempAccount;
 }
 
-onFillTempAccount '' (Configuration c, LegalEntity e) {
+onFillTempAccount '' (Configuration c) {
     LOCAL f = XMLFILE ();
     READ receivePath(c) + '.xml' TO f;
     IMPORT message XML FROM f();
-    onImportAccount1(c,e);  onImportAccount2(c,e);  onImportAccount3(c,e);  // Расходы
-    onImportAccount4(c,e);  onImportAccount5(c,e);  onImportAccount6(c,e);  // Расходы
-    onImportAccount7(c,e);  onImportAccount8(c,e);  onImportAccount9(c,e);  // Расходы
-    onImportAccount10(c,e); onImportAccount11(c,e); onImportAccount12(c,e); // Приходы
-    onImportAccount13(c,e); onImportAccount14(c,e); onImportAccount15(c,e); // Приходы
+    onImportAccount1(c);  onImportAccount2(c);  onImportAccount3(c);  // Расходы
+    onImportAccount4(c);  onImportAccount5(c);  onImportAccount6(c);  // Расходы
+    onImportAccount7(c);  onImportAccount8(c);  onImportAccount9(c);  // Расходы
+    onImportAccount10(c); onImportAccount11(c); onImportAccount12(c); // Приходы
+    onImportAccount13(c); onImportAccount14(c); onImportAccount15(c); // Приходы
 }   
