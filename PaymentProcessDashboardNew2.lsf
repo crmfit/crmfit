@@ -7,7 +7,7 @@ mainLegalEntity 'Фильтр по основной компании' =
 
 idFltCurrentCompany 'ID текущей компании' = DATA LOCAL ConfigurationLegalEntity ();
 fltCurrentCompany  'Текущая компания' = name(legalEntity(idFltCurrentCompany()));
-fltCompany 'фильтр по компании' = DATA LOCAL BOOLEAN ();
+fltCompany 'фильтр по компании' = DATA LOCAL BOOLEAN (); // отменяет или разрешает фильтры по компании
 
 
 EXTEND FORM paymentProcessDasboard 
