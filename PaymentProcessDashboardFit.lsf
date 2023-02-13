@@ -1,6 +1,6 @@
-MODULE PaymentProcessDashboardNew2;
+MODULE PaymentProcessDashboardFit;
 
-REQUIRE PaymentProcessDashboardNew, EnterpriseDataProperty;
+REQUIRE PaymentProcessDashboardNew, EnterpriseDataProperty, ExpenseFit, PaymentFit;
 
 mainLegalEntity 'Фильтр по основной компании' = 
     legalEntity(GROUP MAX (ConfigurationLegalEntity e) IF signMain(e) AND signPayment(configuration(e)));
@@ -29,3 +29,8 @@ DESIGN paymentProcessDasboard {
         MOVE PROPERTY (fltCompany());
     }
 }
+
+EXTEND FORM paymentProcessDasboard
+    PROPERTIES (p) kz
+    PROPERTIES (e) number, kz 
+;

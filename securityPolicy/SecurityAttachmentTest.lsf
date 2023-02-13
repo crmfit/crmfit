@@ -1,0 +1,46 @@
+MODULE SecurityAttachmentTest;
+
+REQUIRE SecurityAttachment;
+
+FORM ov 'Типы'
+    OBJECTS o = AttachmentType
+    PROPERTIES(o) inAttachmentType,name
+;
+
+onClick 'Click' () {
+    onSetSecurityPolicy();
+    SHOW ov;
+}
+
+FORM myform 'Тесты'
+    OBJECTS a = Attachment
+        PROPERTIES (a) READONLY id, nameCustomer, number, date, nameType, note, nameCreatedUser, createdDate
+        PROPERTIES(a) NEWSESSION EDIT, DELETE
+        FILTERS nameCustomer(a) = '1С-Битрикс'
+    OBJECTS ur = UserRole
+        PROPERTIES (ur) limitAccessDocType
+        PROPERTIES (ur) READONLY name
+    OBJECTS at = AttachmentType
+        PROPERTIES inUserRoleAttachmentType(ur,at)
+        PROPERTIES (at) READONLY name
+        PROPERTIES (at) NEWSESSION NEW, EDIT, DELETE
+    EVENTS ON INIT onSetSecurityPolicy()   
+        PROPERTIES onClick()   
+    FILTERS type(a) = checkAttachmentType(a);
+;
+
+DESIGN myform {
+    OBJECTS {
+        NEW set {
+            horizontal = TRUE ;
+            fill = 1;
+            MOVE BOX (ur);
+            MOVE BOX (at);
+        }
+    }
+}
+
+NAVIGATOR {
+    NEW myform WINDOW toolbar;
+}
+

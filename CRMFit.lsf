@@ -13,7 +13,8 @@ REQUIRE Scheduler, Service, SystemEvents, Backup, Eval, SQLUtils, ProcessUtils, 
         CustomerDashboard, ProfitDashboard, ContractDashboard, TimeEntryTotalDashboard, TimeEntryAbsense, TimeEntryDefault, DocDashboard, DocFile, EventDashboard,
         ContractWord, AgreementWord, ActWord, WorkingHours, CustomerAttachment, TimeEntryImport, TimesheetDashboard, DebtDashboard, CustomerAttachmentImport,
         Expense, ExpenseImport, ProfitMonthDashboard, PaymentProcessDashboard, CustomerTag, CustomerRole, PaymentRole, CustomerTime,
-        Numerator, Pattern, PatternWord, ActTotalDashboard,
+        Numerator, 
+        Pattern, PatternWord, ActTotalDashboard,
         LegalEntityBy, CustomerDashboardBy, LegalEntityImportBy, ContractWordBy, AgreementWordBy, ActWordBy,
         EquipmentDashboard, EquipmentLicense,
         EmailTemplate, ActEmailTemplate, DebtEmailTemplate,
@@ -24,10 +25,13 @@ REQUIRE Scheduler, Service, SystemEvents, Backup, Eval, SQLUtils, ProcessUtils, 
         ProjectRedmineNew, CustomerNew, DebtDashboardNew, EventDashboardNew, RateService,
         AgreementIssueNew, IssueDashboardNew, StaticClientType, EmployeeNew, ContractDashboardNew,
         TempClassReports, AgreementNew, TasksEmployees, DocDashboardNew,
-        PaymentProcessDashboardNew, ActWordNew, ActRevise, DebtNew, NormDocs,  
+        PaymentProcessDashboardNew, ActWordNew, ActRevise, DebtNew, NormDocs,
+        EquipmentDasboardChange,  
         // --- FIT 
         LegalEntityFit, 
-        // TestDataShow,
-        // EnterpriseData, стыковкка с 1C
-       EnterpriseDataCrmFit, PaymentProcessDashboardNew2 
+        EnterpriseDataCrmFit, PaymentProcessDashboardFit; // EnterpriseData, стыковкка с 1C
+        // --------------------------------------       
+        // Пока отключено SecurityAttachment, RM19021 - не понятно надо-не надо       
+        // SecurityAttachment //, SecurityAttachmentTest //- только для отладки 
+        // --------------------------------------       
 ;

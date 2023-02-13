@@ -1,0 +1,8 @@
+MODULE PaymentFit;
+
+REQUIRE Payment;
+
+NAMESPACE Payment;
+
+kz 'КЗ' = DATA STRING[2] (Payment); // код затрат
+

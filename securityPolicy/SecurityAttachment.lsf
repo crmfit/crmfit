@@ -1,0 +1,57 @@
+MODULE SecurityAttachment;
+
+REQUIRE Security, CustomerAttachment, CustomerDashboard, Utils;
+
+@addRoleApplicationSetting(limitAccessDocType,'Ограничить доступ к докуметам по типам',BOOLEAN);
+
+// Обработка может строиться на включение типов предложений (так в постановке, RM19021) AttachmentType или исключении типов
+// Смотри здесь, комментарий к checkAttachmentType
+// Построенно на исключении типов предложений. Так правильнее. То есть все типы изначально включены. 
+// 1. При добавлении новых типов пользователем и созданием документов с новым типом, 
+//    документ из-за действия фильтра не исчезнет для пользователя и дополнительных действий в этом случае не потребуется
+// 2. Проще администрирование: легче заблокировать доступ нескольким типам документам, которые могут составлять служебную тайну
+
+inUserRoleAttachmentType 'Исключить' = DATA BOOLEAN (UserRole,AttachmentType) CHARWIDTH 10;
+inAttachmentType 'Исключить' = DATA LOCAL BOOLEAN (AttachmentType) CHARWIDTH 10;
+
+EXTEND FORM securityPolicy
+    OBJECTS ur2 = UserRole
+        PROPERTIES (ur2) limitAccessDocType
+        PROPERTIES (ur2) READONLY name
+    OBJECTS at = AttachmentType
+        PROPERTIES inUserRoleAttachmentType(ur2,at)
+        PROPERTIES (at) READONLY name
+        PROPERTIES (at) NEWSESSION NEW, EDIT, DELETE
+;
+
+DESIGN securityPolicy {
+    rolePolicyContainer {
+        NEW cntAttachment {
+            caption = 'Роли и Типы документов';
+            horizontal = TRUE;
+            fill = 1;
+            MOVE BOX(ur2) {
+                PROPERTY (limitAccessDocType(ur2)) { caption = 'Ограничение\nдоступа'; charWidth=12; }
+                PROPERTY (name(ur2)) { caption = 'Название роли'; }
+            }
+            MOVE BOX(at) {
+                caption = 'Исключаемые типы предложений';
+                PROPERTY (inUserRoleAttachmentType(ur2,at)) { caption = 'Исключить\nтипы'; charWidth=12; }
+            }
+        }
+    }   
+}
+
+onSetSecurityPolicy '' () {
+    inAttachmentType(AttachmentType at) <- NULL;  
+    FOR (UserRole role IS UserRole) AND (has(currentUser(), role) OR overIn(currentUser(), role)) DO
+        FOR (AttachmentType at IS AttachmentType) AND limitAccessDocType(role) AND inUserRoleAttachmentType(role,at) DO inAttachmentType(at) <- TRUE;  
+}
+
+// если включить AND inAttachmentType(t), иначе если исключить: AND NOT inAttachmentType(t)
+checkAttachmentType '' (Attachment o) = GROUP MAX (AttachmentType t) IF t = type(o) AND NOT inAttachmentType(t);  
+
+
+EXTEND FORM dashboardCustomer FILTERS type(at) = checkAttachmentType(at) EVENTS ON INIT onSetSecurityPolicy();
+
+EXTEND FORM attachmentTypes FILTERS NOT inAttachmentType(o) EVENTS ON INIT onSetSecurityPolicy();

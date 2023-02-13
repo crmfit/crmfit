@@ -18,9 +18,16 @@ META defImportDoc(Ind,DocumentName)
     GROUP vorghanizatsiia##Ind EXTID 'Организация' : vkliuchievyieSvoistva##Ind;
     GROUP vobshchiieDannyie##Ind EXTID 'ОбщиеДанные';
     GROUP vbankovskiiSchietOrghanizatsii##Ind EXTID 'БанковскийСчетОрганизации' : vobshchiieDannyie##Ind;
+    
+    GROUP vdopolnitiel_nyieRiekvizity##Ind EXTID 'ДополнительныеРеквизиты' : vobshchiieDannyie##Ind;
+    GROUP vstrokaDR##Ind EXTID 'Строка' : vdopolnitiel_nyieRiekvizity##Ind;
+    GROUP vznachieniieSvoistva##Ind EXTID 'ЗначениеСвойства' : vstrokaDR##Ind;
+    
         vssylka##Ind = DATA LOCAL STRING(INTEGER);
         vINN##Ind = DATA LOCAL STRING(INTEGER);
         vnomierSchieta##Ind = DATA LOCAL STRING(INTEGER);
+        kz##Ind = DATA LOCAL STRING(INTEGER);
+    
     EXTEND FORM message
     OBJECTS vdokumient##Ind = INTEGER EXTID DocumentName IN body
     OBJECTS vkliuchievyieSvoistva##Ind = INTEGER EXTID 'КлючевыеСвойства'
@@ -28,6 +35,10 @@ META defImportDoc(Ind,DocumentName)
     PROPERTIES(vdokumient##Ind) IN vorghanizatsiia##Ind vINN##Ind EXTID 'ИНН'
     OBJECTS vobshchiieDannyie##Ind = INTEGER EXTID 'ОбщиеДанные'
     PROPERTIES(vdokumient##Ind) IN vbankovskiiSchietOrghanizatsii##Ind vnomierSchieta##Ind EXTID 'НомерСчета'
+
+    OBJECTS vstrokaDR##Ind = INTEGER EXTID 'Строка' IN vdopolnitiel_nyieRiekvizity##Ind
+    PROPERTIES(vdokumient##Ind) IN vznachieniieSvoistva##Ind kz##Ind EXTID 'Строка'
+    
     FILTERS imported(vdokumient##Ind);
 END;
 
@@ -67,8 +78,8 @@ uidDocument 'UID документа' = DATA ISTRING[36] (tempAccount);
 innCompany 'ИНН компании' = DATA STRING[12]  (tempAccount);
 accountNumber 'Номер расчетного счета' = DATA STRING[50] (tempAccount);
 contractNumber = DATA STRING[15] (tempAccount);
-contractDate = DATA DATE  (tempAccount);
-
+contractDate = DATA DATE (tempAccount);
+kz 'Код затрат' = DATA STRING[2] (tempAccount);
 
 onAddImportAccount (tempAccount o, INTEGER ind,i) {
     IF NOT ind = 10 THEN RETURN ;
@@ -83,6 +94,7 @@ META onImportAccount(ind)
             uidDocument(o) <- ISTRING[36](vssylka##ind(i));
             innCompany(o) <- STRING[12](vINN##ind(i));
             accountNumber(o) <- STRING[50](vnomierSchieta##ind(i));
+            kz(o) <- STRING[2](kz##ind(i));
             onAddImportAccount(o,ind,i);
         }
     } 
@@ -107,6 +119,8 @@ END
 onClearTempTable () {
     DELETE tempAccount a WHERE a IS tempAccount;
 }
+
+// FORM v1 OBJECTS o = tempAccount PROPERTIES (o) uidDocument, innCompany, contractDate, contractNumber, kz;
 
 onFillTempAccount '' (Configuration c) {
     LOCAL f = XMLFILE ();

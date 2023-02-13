@@ -2,7 +2,8 @@ MODULE EnterpriseDataCrmFit;
 
 REQUIRE EnterpriseData, EnterpriseDataExchange, EnterpriseTest, 
         EnterpriseDataProperty, EnterpriseDataOtherReceive,
-        LegalEntityFit, Customer, PaymentContract, Payment, Expense, ExpenseFit, Utils, Time;
+        LegalEntityFit, Customer, PaymentContract, Payment, Expense, ExpenseFit, PaymentFit, 
+        Utils, Time;
 
 NAMESPACE EnterpriseData;
 
@@ -21,10 +22,13 @@ checkAccount '' (Configuration c,STRING[36] uid) = account(
     GROUP MAX (ConfigurationLegalEntity e) 
     IF configuration(e) = c AND legalEntityINN(e) = innCompany(oTempDoc(uid)) AND number(account(e)) = accountNumber(oTempDoc(uid))); 
 
+getKZ 'Получить код затрат' (STRING[36] uid) = kz(oTempDoc(uid));
 
 // Configuration, Expense, PartnerPaymentOrder, PaymentOrder, Detail
 // Расчеты с организациями
-// Создавать клиента, если не существуе организация - не будем. так как нет четких критереев поиска клиента 
+// Привязку к организации осуществляем по INN (УНН), если INN не найден в списке организаций, то:
+// - создаем новую организацию 
+// - нового клиента не создаем, так как нет четких критереев поиска клиента 
 // Если надо связать с клиентом, то пусть привязывают самостоятельно
 META onImportData(Ind, Table, Partner, Procedure, Detail)
     onImportData##Ind(Configuration c) {
@@ -56,6 +60,7 @@ META onImportData(Ind, Table, Partner, Procedure, Detail)
             Table.note(o) <- ISTRING[100](purpose##Detail(i));
             Table.company(o) <- legalEntity(checkCompany(c, uid##Procedure(i))); 
             Table.legalEntity(o) <- object(uid##Partner(i)) AS LegalEntity;
+            Table.kz(o) <- getKZ(uid##Procedure(i));
             Table.account(o) <- checkAccount(c,uid##Procedure(i));
         }
    } 
@@ -92,6 +97,7 @@ META onImportDataP(Ind, Table, Partner, Procedure, Detail)
             Table.company(o) <- legalEntity(checkCompany(c, uid##Procedure(i))); 
             Table.legalEntity(o) <- object(uid##Partner(i)) AS LegalEntity;
             Table.account(o) <- checkAccount(c,uid##Procedure(i));
+            Table.kz(o) <- getKZ(uid##Procedure(i));
             Table.contract(o) <- GROUP MAX (Contract.Contract oc) 
                 IF legalEntity(oc) = Table.legalEntity(o) AND number(oc) = 
                         contractNumber(GROUP MAX tempAccount t IF uidDocument(t) = uid##Procedure(i));
