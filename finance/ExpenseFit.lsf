@@ -6,3 +6,4 @@ NAMESPACE Expense;
 
 number 'Номер' = DATA STRING[15] (Expense);
 kz 'КЗ' = DATA STRING[2] (Expense); // код затрат
+

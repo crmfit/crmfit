@@ -32,5 +32,7 @@ DESIGN paymentProcessDasboard {
 
 EXTEND FORM paymentProcessDasboard
     PROPERTIES (p) kz
-    PROPERTIES (e) number, kz 
+    PROPERTIES (p) costCode
+    PROPERTIES (p) READONLY costName BACKGROUND COLOR(color(cost(p)))
+    PROPERTIES (e) number
 ;

@@ -1,0 +1,82 @@
+MODULE DirCost;
+
+REQUIRE Utils, Finance;
+
+NAMESPACE cost;
+
+CLASS  Cost 'Справочник затрат';
+TABLE cost (Cost);
+
+code 'Код' = DATA STRING[2] (Cost) NONULL;
+name 'Наименование' = DATA ISTRING (Cost) NONULL;
+color 'Цвет' = DATA COLOR (Cost) ;
+
+ucode = GROUP AGGR (Cost o) BY code(o);
+
+onCheck 'Проверка и добавление' (STRING[2] pcode, ISTRING pname) {
+    IF GROUP MAX(Cost o) IF code(o) = pcode THEN RETURN;
+    NEW o = Cost {
+        code(o) <- pcode;
+        name(o) <- pname; 
+    } 
+}
+
+onFill 'Автозаполнение' () {
+    NEWSESSION {
+        onCheck('11','Лицензия ФИТ'); 
+        onCheck('12','Сопровождение ФИТ');
+        onCheck('13','Продажа товара');
+        onCheck('14','Доработка ФИТ');
+        onCheck('15','Вознаграждение ФИТ');
+        onCheck('16','Консультация ФИТ');
+        onCheck('21','Лицензия Fusion');
+        onCheck('22','Сопровождение Fusion'); 
+        onCheck('23','Доработка Fusion');
+        onCheck('24','Доп. часы Fusion');
+        onCheck('25','Лицензия ТСД');
+        APPLY;
+    }
+}
+
+
+FORM viewCost 'Справочник затрат'
+    OBJECTS c = Cost
+    PROPERTIES (c) READONLY code, name, color 
+    PROPERTIES (c) NEWSESSION NEW, EDIT, DELETE
+    PROPERTIES onFill() TOOLBAR 
+    ORDERS code(c)
+;
+
+FORM editCost 'Рактирование затрат'
+    OBJECTS c = Cost PANEL 
+    PROPERTIES (c) code, name, color
+    EDIT Cost OBJECT c
+;
+
+DESIGN editCost {
+    OBJECTS {
+        NEW cnt {
+            horizontal = FALSE ;
+            MOVE PROPERTY (code(c));
+            MOVE PROPERTY (name(c)) {charWidth=50;};
+            MOVE PROPERTY (color(c));
+        }
+    }
+}
+
+FORM listCost 'Справочник затрат'
+    OBJECTS c = Cost
+    PROPERTIES (c) READONLY code, name
+    LIST Cost OBJECT c
+    ORDERS code(c)
+;
+
+NAVIGATOR {
+    finance {
+        NEW viewCost;
+    }
+}
+
+
+
+

@@ -29,7 +29,8 @@ REQUIRE Scheduler, Service, SystemEvents, Backup, Eval, SQLUtils, ProcessUtils, 
         EquipmentDasboardChange,  
         // --- FIT 
         LegalEntityFit, 
-        EnterpriseDataCrmFit, PaymentProcessDashboardFit; // EnterpriseData, стыковкка с 1C
+        EnterpriseDataCrmFit, PaymentProcessDashboardFit, // EnterpriseData, стыковкка с 1C
+        DirCost; // Справочник Затрат, RM22778 
         // --------------------------------------       
         // Пока отключено SecurityAttachment, RM19021 - не понятно надо-не надо       
         // SecurityAttachment //, SecurityAttachmentTest //- только для отладки 

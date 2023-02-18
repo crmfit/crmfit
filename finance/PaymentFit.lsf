@@ -1,0 +1,33 @@
+MODULE PaymentFit;
+
+REQUIRE Payment, DirCost;
+
+NAMESPACE Payment;
+
+kz '*КЗ' = DATA STRING[2] (Payment); // код затрат
+cost 'ID затрат' = DATA Cost (Payment);
+
+costCode 'КЗ' (Payment o) = code(cost(o));
+costName 'Затраты' (Payment o) = name(cost(o)); 
+
+
+EXTEND FORM payments
+    PROPERTIES(o) READONLY costCode, costName BACKGROUND COLOR(color(cost(o)))
+;
+
+EXTEND FORM payment
+    PROPERTIES (o) costCode
+    PROPERTIES (o) READONLY costName
+    
+;
+
+DESIGN payment {
+    OBJECTS {
+        NEW cost {
+            horizontal = FALSE ;
+            caption = 'Статьи затрат';
+            MOVE PROPERTY (costCode(o));
+            MOVE PROPERTY (costName(o));
+        }
+    }
+}
