@@ -13,27 +13,31 @@ color 'Цвет' = DATA COLOR (Cost) ;
 
 ucode = GROUP AGGR (Cost o) BY code(o);
 
-onCheck 'Проверка и добавление' (STRING[2] pcode, ISTRING pname) {
+onCheck 'Проверка и добавление' (STRING[2] pcode, ISTRING pname, COLOR pcolor) {
     IF GROUP MAX(Cost o) IF code(o) = pcode THEN RETURN;
     NEW o = Cost {
-        code(o) <- pcode;
-        name(o) <- pname; 
+        code(o)  <- pcode;
+        name(o)  <- pname; 
+        color(o) <- pcolor; 
     } 
 }
 
 onFill 'Автозаполнение' () {
     NEWSESSION {
-        onCheck('11','Лицензия ФИТ'); 
-        onCheck('12','Сопровождение ФИТ');
-        onCheck('13','Продажа товара');
-        onCheck('14','Доработка ФИТ');
-        onCheck('15','Вознаграждение ФИТ');
-        onCheck('16','Консультация ФИТ');
-        onCheck('21','Лицензия Fusion');
-        onCheck('22','Сопровождение Fusion'); 
-        onCheck('23','Доработка Fusion');
-        onCheck('24','Доп. часы Fusion');
-        onCheck('25','Лицензия ТСД');
+        LOCAL pfit,plux = COLOR ();
+        plux() <- NULL;
+        pfit() <- NULL; 
+        onCheck('11','Лицензия ФИТ',pfit()); 
+        onCheck('12','Сопровождение ФИТ',pfit());
+        onCheck('13','Продажа товара',pfit());
+        onCheck('14','Доработка ФИТ',pfit());
+        onCheck('15','Вознаграждение ФИТ',pfit());
+        onCheck('16','Консультация ФИТ',pfit());
+        onCheck('21','Лицензия Fusion',plux());
+        onCheck('22','Сопровождение Fusion',plux()); 
+        onCheck('23','Доработка Fusion',plux());
+        onCheck('24','Доп. часы Fusion',plux());
+        onCheck('25','Лицензия ТСД',plux());
         APPLY;
     }
 }
