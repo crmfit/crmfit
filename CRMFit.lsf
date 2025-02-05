@@ -19,7 +19,7 @@ REQUIRE Scheduler, Service, SystemEvents, Backup, Eval, SQLUtils, ProcessUtils, 
         EquipmentDashboard, EquipmentLicense,
         EmailTemplate, ActEmailTemplate, DebtEmailTemplate,
         // --- others
-        Ivanov, Resource,
+        Ivanov, Resource, Igor,
         // --- added / CRMRework ---
         FixedAssets, EquipmentDashboardNew, CustomerDashboardNew, CustomerTimeNew, ImportRmExt,                
         ProjectRedmineNew, CustomerNew, DebtDashboardNew, EventDashboardNew, RateService,

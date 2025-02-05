@@ -300,18 +300,21 @@ DESIGN integrationData {
             caption = 'Обмен 1С';
             MOVE BOX (c);
             NEW status {
-                type = CONTAINERH;
+//                type = CONTAINERH;
+                horizontal = FALSE ;
                 MOVE PROPERTY (panelIdSended);
                 MOVE PROPERTY (panelIdReceived);
             }
             NEW basic {
-                type = CONTAINERH;      
+//                type = CONTAINERH;
+                horizontal = FALSE ;
                 MOVE PROPERTY (panelDataStartExchange);
                 MOVE PROPERTY (panelToBase);
                 MOVE PROPERTY (fromBase());
             }
             NEW path {
-                type = CONTAINERH;
+//                type = CONTAINERH;
+                horizontal = FALSE ;
                 MOVE PROPERTY (path());
             }                
             NEW cGrid {
@@ -319,7 +322,8 @@ DESIGN integrationData {
                 MOVE BOX (c);
             }
             NEW buttons {
-                type = CONTAINERH;
+//                type = CONTAINERH;
+                horizontal = FALSE ;
                 MOVE PROPERTY (sendMessage(c));
                 MOVE PROPERTY (receiveMessage(c));
                 MOVE PROPERTY (generateUid());
