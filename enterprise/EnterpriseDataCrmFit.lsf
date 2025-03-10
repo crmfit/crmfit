@@ -3,7 +3,7 @@ MODULE EnterpriseDataCrmFit;
 REQUIRE EnterpriseData, EnterpriseDataExchange, EnterpriseTest, 
         EnterpriseDataProperty, EnterpriseDataOtherReceive,
         LegalEntityFit, Customer, PaymentContract, Payment, Expense, ExpenseFit, PaymentFit, 
-        Utils, Time;
+        Utils, Time, AddEnterprtise;
 
 NAMESPACE EnterpriseData;
 
@@ -221,6 +221,7 @@ overReceive(Configuration c) + {
     onImportDataP201(c); onImportData202(c); onImportData203(c);  // Приходы
     onImportData204(c);  onImportData205(c); onImportData206(c);  // Приходы
     onClearTempTable();
+    onAddCurrency();
 }
 
 
