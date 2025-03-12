@@ -221,7 +221,6 @@ overReceive(Configuration c) + {
     onImportDataP201(c); onImportData202(c); onImportData203(c);  // Приходы
     onImportData204(c);  onImportData205(c); onImportData206(c);  // Приходы
     onClearTempTable();
-    onAddCurrency();
 }
 
 

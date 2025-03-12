@@ -3,8 +3,16 @@ MODULE AddEnterprtise;
 REQUIRE Payment, Expense;
 
 onAddCurrency 'Добавление кода валюты' () {
-    LOCAL ob = Currency();
-    ob() <- GROUP MAX (Currency o) IF sid(o) = 'RUB';
-    FOR (Payment p IS Payment) AND NOT currency(p) DO currency(p) <- ob();
-    FOR (Expense e IS Expense) AND NOT currency(e) DO currency(e) <- ob();
+    LOCAL ob = Currency.Currency();
+    LOCAL lf = BOOLEAN ();
+    ob() <- GROUP MAX (Currency.Currency o) IF sid(o) = 'RUB';
+    FOR (Payment.Payment p IS Payment.Payment) AND NOT currency(p) DO {
+        currency(p) <- ob();
+        lf() <- TRUE;
+    }
+    FOR (Expense.Expense e IS Expense.Expense) AND NOT currency(e) DO {
+        currency(e) <- ob();
+        lf() <- TRUE;
+    }
+    IF lf() THEN APPLY; 
 }
